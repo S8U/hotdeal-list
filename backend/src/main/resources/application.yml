@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: hotdeal-list
+  profiles:
+    active: local
+  config:
+    import: optional:file:backend/.env[.properties]
