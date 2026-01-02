@@ -38,6 +38,9 @@ dependencies {
 	// springdoc-openapi 2.8.x 버전은 이를 자동으로 대응하지 못하여 2.7.0 버전을 사용함
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
+    // HTML Parser
+    implementation("org.jsoup:jsoup:1.18.3")
+
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")

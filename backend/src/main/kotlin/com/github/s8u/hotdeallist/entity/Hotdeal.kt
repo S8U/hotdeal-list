@@ -41,16 +41,10 @@ class Hotdeal(
     val productNameEn: String? = null,
 
     @Column(comment = "가격")
-    val price: Int? = null,
+    val price: Double? = null,
 
     @Column(length = 3, comment = "통화 단위")
     val currencyUnit: String = "KRW",
-
-    @Column(comment = "출처 URL")
-    val sourceUrl: String? = null,
-
-    @Column(comment = "좋아요 수")
-    val likeCount: Int = 0,
 
     @Column(comment = "조회수")
     val viewCount: Int = 0,
@@ -58,8 +52,14 @@ class Hotdeal(
     @Column(comment = "댓글 수")
     val commentCount: Int = 0,
 
+    @Column(comment = "좋아요 수")
+    val likeCount: Int = 0,
+
+    @Column(comment = "출처 URL")
+    val sourceUrl: String? = null,
+
     @Column(comment = "게시글 작성 시간")
-    val wroteAt: LocalDateTime,
+    val wroteAt: LocalDateTime
 ) : BaseEntity()
 
 

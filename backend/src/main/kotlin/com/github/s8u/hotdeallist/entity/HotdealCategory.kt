@@ -25,5 +25,5 @@ class HotdealCategory(
     val categoryId: Long,
 
     @Column(precision = 3, scale = 2, comment = "신뢰도 점수 (0.00 ~ 1.00)")
-    val confidenceScore: BigDecimal? = null,
+    val confidenceScore: BigDecimal? = null
 ) : BaseEntity()

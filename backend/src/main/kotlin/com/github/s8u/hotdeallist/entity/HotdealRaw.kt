@@ -36,20 +36,14 @@ class HotdealRaw(
     @Column(comment = "게시글 카테고리")
     val category: String? = null,
 
-    @Column(comment = "출처 URL")
-    val sourceUrl: String? = null,
-
     @Column(columnDefinition = "TEXT", comment = "게시글 본문 HTML")
     val contentHtml: String? = null,
 
     @Column(comment = "가격")
-    val price: Int? = null,
+    val price: Double? = null,
 
     @Column(length = 3, comment = "통화 단위")
     val currencyUnit: String = "KRW",
-
-    @Column(comment = "좋아요 수")
-    val likeCount: Int = 0,
 
     @Column(comment = "조회수")
     val viewCount: Int = 0,
@@ -57,17 +51,23 @@ class HotdealRaw(
     @Column(comment = "댓글 수")
     val commentCount: Int = 0,
 
+    @Column(comment = "좋아요 수")
+    val likeCount: Int = 0,
+
+    @Column(comment = "핫딜 종료 여부")
+    val isEnded: Boolean = false,
+
+    @Column(comment = "출처 URL")
+    val sourceUrl: String? = null,
+
     @Column(comment = "썸네일 이미지 URL")
     val thumbnailImageUrl: String? = null,
 
     @Column(comment = "첫 번째 이미지 URL")
     val firstImageUrl: String? = null,
 
-    @Column(comment = "핫딜 종료 여부")
-    val isEnded: Boolean = false,
-
     @Column(nullable = false, comment = "게시글 작성 시간")
-    val wroteAt: LocalDateTime,
+    val wroteAt: LocalDateTime
 ) : BaseEntity()
 
 
