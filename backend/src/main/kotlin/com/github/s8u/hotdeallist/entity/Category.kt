@@ -18,20 +18,20 @@ import jakarta.persistence.*
 )
 class Category(
     @Column(comment = "부모 카테고리 ID")
-    val parentId: Long? = null,
+    var parentId: Long? = null,
 
     @Column(nullable = false, unique = true, comment = "카테고리 코드")
     val code: String,
 
     @Column(nullable = false, comment = "카테고리 이름")
-    val name: String,
+    var name: String,
 
-    @Column(comment = "카테고리 이름")
-    val nameEn: String? = null,
+    @Column(comment = "카테고리 이름 (영문)")
+    var nameEn: String? = null,
 
     @Column(nullable = false, comment = "카테고리 깊이")
-    val depth: Int = 0,
+    var depth: Int = 0,
 
     @Column(comment = "정렬 순서")
-    val sortOrder: Int = 0,
+    var sortOrder: Int = 0
 ) : BaseEntity()
