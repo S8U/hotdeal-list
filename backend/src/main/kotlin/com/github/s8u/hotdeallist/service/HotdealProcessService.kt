@@ -34,7 +34,7 @@ class HotdealProcessService(
         // 무료 모델로 요청
         var model = ""
         val chatResponse = try {
-            logger.debug("Sending AI request: id={}, title={}", rawId, hotdealRaw.title)
+            logger.debug("Sending AI request: rawId={}, title={}", rawId, hotdealRaw.title)
 
             model = "openai/gpt-oss-120b:free"
             val options = OpenAiChatOptions.builder()
@@ -45,7 +45,7 @@ class HotdealProcessService(
         }
         // 실패 시 유료 모델로 요청
         catch (e: Exception) {
-            logger.warn("Free model failed, falling back to paid: id={}, error={}", rawId, e.message)
+            logger.warn("Free model failed, falling back to paid: rawId={}, error={}", rawId, e.message)
 
             model = "openai/gpt-oss-120b"
             val options = OpenAiChatOptions.builder()
@@ -58,15 +58,15 @@ class HotdealProcessService(
         // 응답
         val response = chatResponse.result.output.text
         if (response == null) {
-            logger.error("AI response is null: id={}", rawId)
+            logger.error("AI response is null: rawId={}", rawId)
             throw BusinessException("AI 응답이 없습니다.")
         }
 
-        logger.debug("Received AI response: id={}, response={}", rawId, response)
+        logger.debug("Received AI response: rawId={}, response={}", rawId, response)
 
         val lines = response.trim().split("\n").filter { it.isNotBlank() }
         if (lines.size < 8) {
-            logger.error("Invalid AI response format: id={}, linesCount={}, response={}", rawId, lines.size, response)
+            logger.error("Invalid AI response format: rawId={}, linesCount={}, response={}", rawId, lines.size, response)
             throw BusinessException("AI 응답 형식이 올바르지 않습니다.")
         }
 
@@ -80,7 +80,7 @@ class HotdealProcessService(
         val price = lines[7].trim().let { if (it == "null" || it.isEmpty()) null else it.toBigDecimalOrNull() }
 
         // 저장
-        val hotdealProcess = HotdealProcess(
+        var hotdealProcess = HotdealProcess(
             hotdealRawId = rawId,
             aiPrompt = prompt,
             aiResponse = response,
@@ -96,9 +96,9 @@ class HotdealProcessService(
             currencyUnit = currencyUnit
         )
 
-        hotdealProcessRepository.save(hotdealProcess)
-        logger.info("AI process created: id={}, title={}, titleEn={}, productName={}, productNameEn={}, categoryCode={}, categoryConfidence={}, shoppingPlatform={}, price={}, currencyUnit={}",
-                     rawId, hotdealRaw.title, titleEn, productName, productNameEn, categoryCode, categoryConfidence, shoppingPlatform, price, currencyUnit)
+        hotdealProcess = hotdealProcessRepository.save(hotdealProcess)
+        logger.info("AI process created: id={}, rawId={}, title={}, titleEn={}, productName={}, productNameEn={}, categoryCode={}, categoryConfidence={}, shoppingPlatform={}, price={}, currencyUnit={}",
+                     hotdealProcess.id, rawId, hotdealRaw.title, titleEn, productName, productNameEn, categoryCode, categoryConfidence, shoppingPlatform, price, currencyUnit)
     }
 
     companion object {
