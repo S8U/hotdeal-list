@@ -4,6 +4,7 @@ import com.github.s8u.hotdeallist.entity.HotdealProcess
 import com.github.s8u.hotdeallist.exception.BusinessException
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
 import com.github.s8u.hotdeallist.repository.HotdealRawRepository
+import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.openai.OpenAiChatOptions
@@ -17,7 +18,7 @@ class HotdealProcessService(
     private val chatModel: ChatModel
 ) {
 
-    private val logger = org.slf4j.LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     fun processHotdealFromRaw(rawId: Long) {
         logger.info("Processing hotdeal from rawId={}", rawId)
@@ -29,15 +30,30 @@ class HotdealProcessService(
         val prompt = PROMPT_TEMPLATE
             .replace("{title}", hotdealRaw.title)
             .replace("{category}", hotdealRaw.category?.let { "Category: $it" } ?: "")
-        val model = "openai/gpt-oss-120b"
 
-        val options = OpenAiChatOptions.builder()
-            .model(model)
-            .temperature(0.0)
-            .build()
+        // 무료 모델로 요청
+        var model = ""
+        val chatResponse = try {
+            logger.debug("Sending AI request: id={}, title={}", rawId, hotdealRaw.title)
 
-        logger.debug("Sending AI request: id={}, model={}, title={}", rawId, model, hotdealRaw.title)
-        val chatResponse = chatModel.call(Prompt(prompt, options))
+            model = "openai/gpt-oss-120b:free"
+            val options = OpenAiChatOptions.builder()
+                .model(model)
+                .temperature(0.0)
+                .build()
+            chatModel.call(Prompt(prompt, options))
+        }
+        // 실패 시 유료 모델로 요청
+        catch (e: Exception) {
+            logger.warn("Free model failed, falling back to paid: id={}, error={}", rawId, e.message)
+
+            model = "openai/gpt-oss-120b"
+            val options = OpenAiChatOptions.builder()
+                .model(model)
+                .temperature(0.0)
+                .build()
+            chatModel.call(Prompt(prompt, options))
+        }
 
         // 응답
         val response = chatResponse.result.output.text
@@ -45,7 +61,8 @@ class HotdealProcessService(
             logger.error("AI response is null: id={}", rawId)
             throw BusinessException("AI 응답이 없습니다.")
         }
-        logger.debug("Received AI response: id={}, responseLength={}", rawId, response.length)
+
+        logger.debug("Received AI response: id={}, response={}", rawId, response)
 
         val lines = response.trim().split("\n").filter { it.isNotBlank() }
         if (lines.size < 8) {
