@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 @Table(
     name = "hotdeals",
     indexes = [
-        Index(name = "idx_raw_id", columnList = "raw_id"),
+        Index(name = "idx_hotdeal_raw_id", columnList = "hotdeal_raw_id"),
         Index(name = "idx_platform_type", columnList = "platform_type"),
         Index(name = "idx_wrote_at", columnList = "wrote_at"),
         Index(name = "idx_created_at", columnList = "created_at"),
@@ -19,14 +19,14 @@ import java.time.LocalDateTime
     comment = "핫딜"
 )
 class Hotdeal(
-    @Column(name = "raw_id", nullable = false, comment = "핫딜 원본 데이터 ID")
+    @Column(nullable = false, comment = "핫딜 원본 데이터 ID")
     val hotdealRawId: Long,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, comment = "플랫폼 타입")
     val platformType: PlatformType,
 
-    @Column(nullable = false, comment = "게시글 URL")
+    @Column(nullable = false, length = 2048, comment = "게시글 URL")
     val url: String,
 
     @Column(nullable = false, comment = "게시글 제목")
@@ -59,7 +59,7 @@ class Hotdeal(
     @Column(comment = "종료 여부")
     var isEnded: Boolean = false,
 
-    @Column(comment = "출처 URL")
+    @Column(length = 2048, comment = "출처 URL")
     val sourceUrl: String? = null,
 
     @Column(comment = "게시글 작성 시간")

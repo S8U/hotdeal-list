@@ -28,7 +28,7 @@ class HotdealRaw(
     @Column(nullable = false, comment = "플랫폼의 게시글 ID")
     val platformPostId: String,
 
-    @Column(nullable = false, comment = "게시글 URL")
+    @Column(nullable = false, length = 2048, comment = "게시글 URL")
     val url: String,
 
     @Column(nullable = false, comment = "게시글 제목")
@@ -58,13 +58,13 @@ class HotdealRaw(
     @Column(comment = "종료 여부")
     var isEnded: Boolean = false,
 
-    @Column(comment = "출처 URL")
+    @Column(length = 2048, comment = "출처 URL")
     val sourceUrl: String? = null,
 
-    @Column(comment = "썸네일 이미지 URL")
+    @Column(length = 2048, comment = "썸네일 이미지 URL")
     val thumbnailImageUrl: String? = null,
 
-    @Column(comment = "첫 번째 이미지 URL")
+    @Column(length = 2048, comment = "첫 번째 이미지 URL")
     val firstImageUrl: String? = null,
 
     @Column(nullable = false, comment = "게시글 작성 시간")
