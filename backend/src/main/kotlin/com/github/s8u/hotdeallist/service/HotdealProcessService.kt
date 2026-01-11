@@ -110,9 +110,9 @@ CONTEXT: You are analyzing titles from Korean online community hotdeal boards. T
 Classify products into the hierarchy below ONLY.
 
 RULES:
-- Output exactly 8 lines: title (EN), product (KR), product (EN), category code, category confidence, Shopping platform, currency unit, price.
+- Output exactly 8 lines. Each line must contain ONLY the raw value, NO labels or prefixes like "Title:" or "Product name:".
 - Category: Select ONE most specific category code from the list below. (e.g., prefer 'smartphone' over 'mobile' or 'electronics').
-  * If confidence is low (< 0.5), classify as 'etc' category instead.
+  * If confidence is low (<0.5), classify as 'etc' category instead.
 - Category Confidence: 0.00–1.00, reflect certainty of category classification only.
 - Product name:
   * FORMAT: {brandName | if exists} {productName | if exists, comma-separated} {capacity|quantity | if exists, comma-separated}
@@ -130,15 +130,15 @@ RULES:
   * If multiple product prices exist, use LOWEST final price
   * If none, output "null"
 
-FORMAT:
-Title (English)
-Product name (Original (Korean))
-Product name (English)
-Category code
-Category confidence
-Shopping platform
-Currency unit
-Price
+OUTPUT FORMAT (8 lines, values only, no labels):
+Line 1: Title translated to English
+Line 2: Product name in Korean
+Line 3: Product name in English
+Line 4: Category code
+Line 5: Category confidence
+Line 6: Shopping platform
+Line 7: Currency unit
+Line 8: Price
 
 ---
 
