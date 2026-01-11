@@ -1,6 +1,7 @@
-package com.github.s8u.hotdeallist.crawler
+package com.github.s8u.hotdeallist.crawler.dto
 
 import com.github.s8u.hotdeallist.enums.PlatformType
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class HotdealCrawlDetailDto(
@@ -10,7 +11,7 @@ data class HotdealCrawlDetailDto(
     val title: String,
     val category: String? = null,
     val contentHtml: String? = null,
-    val price: Double? = null,
+    val price: BigDecimal? = null,
     val currencyUnit: String = "KRW",
     val viewCount: Int = 0,
     val commentCount: Int = 0,

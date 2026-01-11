@@ -15,7 +15,7 @@ abstract class BaseEntity(
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    var createdAt: LocalDateTime = LocalDateTime.now(),
 
     @LastModifiedDate
     var updatedAt: LocalDateTime = LocalDateTime.now(),

@@ -1,5 +1,7 @@
 package com.github.s8u.hotdeallist.crawler
 
+import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlDetailDto
+import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlListDto
 import com.github.s8u.hotdeallist.enums.PlatformType
 
 interface HotdealCrawler {

@@ -20,6 +20,12 @@ spring:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: false
 
+  # Spring AI 설정
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://openrouter.ai/api
+
 # 로깅 설정
 logging:
   level:

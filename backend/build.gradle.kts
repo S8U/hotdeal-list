@@ -41,6 +41,9 @@ dependencies {
     // HTML Parser
     implementation("org.jsoup:jsoup:1.18.3")
 
+    // AI
+    implementation("org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M1")
+
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")

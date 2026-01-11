@@ -3,6 +3,7 @@ package com.github.s8u.hotdeallist.entity
 import com.github.s8u.hotdeallist.entity.base.BaseEntity
 import com.github.s8u.hotdeallist.enums.PlatformType
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -17,7 +18,7 @@ import java.time.LocalDateTime
         Index(name = "idx_is_ended", columnList = "is_ended"),
         Index(name = "idx_created_at", columnList = "created_at")
     ],
-    comment = "원본 핫딜 데이터"
+    comment = "핫딜 원본 데이터"
 )
 class HotdealRaw(
     @Enumerated(EnumType.STRING)
@@ -39,23 +40,23 @@ class HotdealRaw(
     @Column(columnDefinition = "TEXT", comment = "게시글 본문 HTML")
     val contentHtml: String? = null,
 
-    @Column(comment = "가격")
-    val price: Double? = null,
+    @Column(nullable = true, scale = 2, comment = "가격")
+    val price: BigDecimal? = null,
 
     @Column(length = 3, comment = "통화 단위")
     val currencyUnit: String = "KRW",
 
     @Column(comment = "조회수")
-    val viewCount: Int = 0,
+    var viewCount: Int = 0,
 
     @Column(comment = "댓글 수")
-    val commentCount: Int = 0,
+    var commentCount: Int = 0,
 
     @Column(comment = "좋아요 수")
-    val likeCount: Int = 0,
+    var likeCount: Int = 0,
 
-    @Column(comment = "핫딜 종료 여부")
-    val isEnded: Boolean = false,
+    @Column(comment = "종료 여부")
+    var isEnded: Boolean = false,
 
     @Column(comment = "출처 URL")
     val sourceUrl: String? = null,
