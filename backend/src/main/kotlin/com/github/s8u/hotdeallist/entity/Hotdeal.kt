@@ -9,6 +9,9 @@ import java.time.LocalDateTime
 @Entity
 @Table(
     name = "hotdeals",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_platform_post", columnNames = ["platform_type", "platform_post_id"])
+    ],
     indexes = [
         Index(name = "idx_hotdeal_raw_id", columnList = "hotdeal_raw_id"),
         Index(name = "idx_platform_type", columnList = "platform_type"),
@@ -25,6 +28,9 @@ class Hotdeal(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, comment = "플랫폼 타입")
     val platformType: PlatformType,
+
+    @Column(nullable = false, comment = "플랫폼 게시글 ID")
+    val platformPostId: String,
 
     @Column(nullable = false, length = 2048, comment = "게시글 URL")
     val url: String,

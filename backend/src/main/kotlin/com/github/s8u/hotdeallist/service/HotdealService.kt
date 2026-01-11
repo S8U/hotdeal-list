@@ -35,6 +35,7 @@ class HotdealService(
         var hotdeal = Hotdeal(
             hotdealRawId = rawId,
             platformType = hotdealRaw.platformType,
+            platformPostId = hotdealRaw.platformPostId,
             url = hotdealRaw.url,
             title = hotdealRaw.title,
             titleEn = hotdealProcess?.titleEn,

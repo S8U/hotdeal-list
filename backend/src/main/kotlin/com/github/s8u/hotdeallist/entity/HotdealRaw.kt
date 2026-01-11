@@ -25,7 +25,7 @@ class HotdealRaw(
     @Column(nullable = false, comment = "플랫폼 타입")
     val platformType: PlatformType,
 
-    @Column(nullable = false, comment = "플랫폼의 게시글 ID")
+    @Column(nullable = false, comment = "플랫폼 게시글 ID")
     val platformPostId: String,
 
     @Column(nullable = false, length = 2048, comment = "게시글 URL")
