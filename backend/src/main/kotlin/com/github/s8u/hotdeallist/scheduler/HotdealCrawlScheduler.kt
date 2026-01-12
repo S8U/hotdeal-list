@@ -15,7 +15,11 @@ class HotdealCrawlScheduler(
     @Scheduled(cron = "30 */3 * * * *")
     fun crawlHotdeal() {
         logger.info("Starting scheduled hotdeal crawl")
-        hotdealServiceFacade.createHotdealAllPlatforms(page = 1)
+
+        for (i in 1..3) {
+            hotdealServiceFacade.createHotdealAllPlatforms(i)
+        }
+
         logger.info("Completed scheduled hotdeal crawl")
     }
 }
