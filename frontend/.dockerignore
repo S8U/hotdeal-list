@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+dist
+
+# Logs
+*.log
+logs
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment files
+.env*
+!.env.example
+
+# Test files
+coverage
+.nyc_output

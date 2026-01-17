@@ -1,0 +1,31 @@
+services:
+  backend:
+    image: ${DOCKER_REGISTRY:-hotdeal-list}-backend:latest
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKER_REGISTRY:-hotdeal-list}-frontend:latest
+    build:
+      context: ./frontend
+    env_file:
+      - ./frontend/.env
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  nginx:
+    image: ${DOCKER_REGISTRY:-hotdeal-list}-nginx:latest
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped

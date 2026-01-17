@@ -1,0 +1,24 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Build outputs
+build
+out
+.gradle
+
+# Logs
+*.log
+logs
+
+# Environment files
+.env*
+!.env.example
+
+# Test files
+src/test
