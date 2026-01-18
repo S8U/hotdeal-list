@@ -5,6 +5,8 @@ services:
       context: ./backend
     env_file:
       - ./backend/.env
+    environment:
+      - TZ=Asia/Seoul
     expose:
       - "8080"
     restart: unless-stopped
@@ -15,6 +17,8 @@ services:
       context: ./frontend
     env_file:
       - ./frontend/.env
+    environment:
+      - TZ=Asia/Seoul
     expose:
       - "3000"
     restart: unless-stopped
