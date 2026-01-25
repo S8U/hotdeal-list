@@ -6,7 +6,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'DOCKER_REGISTRY', defaultValue: '', description: 'Docker Registry URL (예: registry.example.com:8082)'))
+        string(name: 'DOCKER_REGISTRY', defaultValue: '', description: 'Docker Registry URL (예: registry.example.com:8082)')
         string(name: 'DEPLOY_HOST', defaultValue: '', description: '배포 서버 SSH 호스트')
         string(name: 'DEPLOY_USER', defaultValue: 'deploy', description: '배포 서버 SSH 사용자')
         string(name: 'DEPLOY_PATH', defaultValue: '/opt/hotdeal-list', description: '배포 경로')
