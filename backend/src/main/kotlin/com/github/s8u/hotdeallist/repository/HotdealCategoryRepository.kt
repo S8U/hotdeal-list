@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface HotdealCategoryRepository : JpaRepository<HotdealCategory, Long> {
+    fun findByHotdealId(hotdealId: Long): List<HotdealCategory>
 }

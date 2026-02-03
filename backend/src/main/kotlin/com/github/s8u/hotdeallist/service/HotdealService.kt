@@ -15,7 +15,8 @@ class HotdealService(
     private val hotdealCategoryRepository: HotdealCategoryRepository,
     private val hotdealRawRepository: HotdealRawRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val hotdealSearchService: HotdealSearchService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -74,6 +75,8 @@ class HotdealService(
             hotdealCategoryRepository.saveAll(hotdealCategories)
         }
 
+        hotdealSearchService.indexHotdeal(hotdeal)
+
         logger.info("Created hotdeal from rawId={}, id={}", rawId, hotdeal.id)
     }
 
@@ -92,6 +95,7 @@ class HotdealService(
         hotdeal.isEnded = hotdealRaw.isEnded ?: false
 
         hotdealRepository.save(hotdeal)
+        hotdealSearchService.updateHotdeal(hotdeal)
 
         logger.info("Updated hotdeal from rawId={}, viewCount={}, commentCount={}, likeCount={}, isEnded={}", rawId, hotdeal.viewCount, hotdeal.commentCount, hotdeal.likeCount, hotdeal.isEnded)
     }

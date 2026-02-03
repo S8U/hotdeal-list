@@ -20,6 +20,12 @@ spring:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: false
 
+  # Elasticsearch 설정
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
   # Spring AI 설정
   ai:
     openai:

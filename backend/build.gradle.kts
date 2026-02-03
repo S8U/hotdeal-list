@@ -28,6 +28,7 @@ dependencies {
 	// Spring Boot
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
 
 	// Database
 	runtimeOnly("com.mysql:mysql-connector-j")
