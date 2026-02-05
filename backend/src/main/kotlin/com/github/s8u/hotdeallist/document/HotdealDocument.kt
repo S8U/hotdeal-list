@@ -57,6 +57,9 @@ class HotdealDocument(
     @Field(type = FieldType.Keyword, index = false)
     val sourceUrl: String? = null,
 
+    @Field(type = FieldType.Keyword, index = false)
+    val thumbnailUrl: String? = null,
+
     @Field(type = FieldType.Date, format = [DateFormat.date_hour_minute_second_millis, DateFormat.epoch_millis])
     val wroteAt: LocalDateTime,
 

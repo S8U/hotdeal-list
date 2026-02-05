@@ -7,7 +7,7 @@
 | 크롤링 (6개 커뮤니티) | ✅ 완료 | Spring Scheduler, 3분 주기 |
 | AI 가공 (카테고리/상품명/번역) | ✅ 완료 | Spring AI + OpenAI |
 | Elasticsearch 연동 | ✅ 완료 | Phase 1 |
-| 썸네일 다운로드 + 스토리지 | ❌ 미구현 | Phase 1.5 |
+| 썸네일 다운로드 + 스토리지 | ✅ 완료 | Phase 1.5 |
 | 핫딜 조회 API | ❌ 미구현 | Phase 2 |
 | 필터 + 검색 | ❌ 미구현 | Phase 3 |
 | 가격 히스토리 | ❌ 미구현 | Phase 4 |
@@ -50,25 +50,26 @@
 
 ### 태스크
 
-- [ ] 1.5-1. FileStore 인터페이스 정의 (범용 스토리지)
-- [ ] 1.5-2. LocalFileStore 구현
-- [ ] 1.5-3. S3FileStore 구현 (Cloudflare R2 호환)
-- [ ] 1.5-4. application.yml 스토리지 타입 설정 (local/s3)
-- [ ] 1.5-5. ThumbnailService 구현 (우선순위: 썸네일 > 본문 첫 이미지)
-- [ ] 1.5-6. HotdealService에서 ThumbnailService 연동
-- [ ] 1.5-7. Hotdeal 엔티티에 thumbnailUrl 필드 추가
-- [ ] 1.5-8. HotdealDocument에 thumbnailUrl 필드 추가 + ES 동기화
+- [x] 1.5-1. FileStore 인터페이스 정의 (범용 스토리지)
+- [x] 1.5-2. LocalFileStore 구현
+- [x] 1.5-3. S3FileStore 구현 (Cloudflare R2 호환)
+- [x] 1.5-4. application.yml 스토리지 타입 설정 (local/s3)
+- [x] 1.5-5. ThumbnailService 구현 (우선순위: 썸네일 > 본문 첫 이미지, WebP 변환)
+- [x] 1.5-6. HotdealService에서 ThumbnailService 연동
+- [x] 1.5-7. Hotdeal 엔티티에 thumbnailPath 필드 추가
+- [x] 1.5-8. HotdealDocument에 thumbnailPath 필드 추가 + ES 동기화
 
 ### 테스트 기준
-- [ ] 환경변수로 local/s3 스토리지 전환 가능
-- [ ] 핫딜 생성 시 썸네일 자동 다운로드
-- [ ] 썸네일 URL이 ES에 인덱싱
-- [ ] 썸네일 없는 경우 graceful 처리 (null 허용)
+- [x] 환경변수로 local/s3 스토리지 전환 가능
+- [x] 핫딜 생성 시 썸네일 자동 다운로드
+- [x] 썸네일 Path가 ES에 인덱싱
+- [x] 썸네일 없는 경우 graceful 처리 (null 허용)
 
 ### 관련 파일
 - `backend/src/main/kotlin/.../store/FileStore.kt` - 스토리지 인터페이스
 - `backend/src/main/kotlin/.../store/LocalFileStore.kt` - 로컬 구현
 - `backend/src/main/kotlin/.../store/S3FileStore.kt` - S3 구현
+- `backend/src/main/kotlin/.../config/FileStoreConfig.kt` - 스토리지 설정
 - `backend/src/main/kotlin/.../service/ThumbnailService.kt` - 썸네일 다운로드 서비스
 
 ---
@@ -194,9 +195,9 @@
 ```
 Phase 1: ES 도입 + 핫딜 인덱싱 (데이터 인프라) ✅ 완료
     ↓
-Phase 1.5: 썸네일 다운로드 + 스토리지 ← 현재
+Phase 1.5: 썸네일 다운로드 + 스토리지 ✅ 완료
     ↓
-Phase 2: 핫딜 조회 API (ES 기반)
+Phase 2: 핫딜 조회 API (ES 기반) ← 현재
     ↓
 Phase 3: 필터 + 검색
     ↓

@@ -54,3 +54,17 @@ logging:
 base-url:
   api: ${BASE_URL_API:https://api.hotdeal-list.com}
   frontend: ${BASE_URL_FRONTEND:https://hotdeal-list.com}
+
+# 파일 스토리지 설정
+file-store:
+  type: ${FILE_STORE_TYPE:s3}
+  local:
+    base-path: ${FILE_STORE_LOCAL_PATH:./storage}
+    base-url: ${FILE_STORE_LOCAL_URL:http://localhost:8080/storage}
+  s3:
+    bucket: ${FILE_STORE_S3_BUCKET:}
+    base-url: ${FILE_STORE_S3_BASE_URL:}
+    endpoint: ${FILE_STORE_S3_ENDPOINT:}
+    access-key: ${FILE_STORE_S3_ACCESS_KEY:}
+    secret-key: ${FILE_STORE_S3_SECRET_KEY:}
+    region: ${FILE_STORE_S3_REGION:auto}

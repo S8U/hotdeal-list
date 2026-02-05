@@ -68,6 +68,9 @@ class Hotdeal(
     @Column(length = 2048, comment = "출처 URL")
     val sourceUrl: String? = null,
 
+    @Column(length = 512, comment = "썸네일 경로")
+    var thumbnailPath: String? = null,
+
     @Column(comment = "게시글 작성 시간")
     val wroteAt: LocalDateTime
 ) : BaseEntity()

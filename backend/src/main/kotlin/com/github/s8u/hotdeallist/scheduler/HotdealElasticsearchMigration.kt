@@ -7,6 +7,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations
+import org.springframework.data.elasticsearch.core.IndexOperations
+import com.github.s8u.hotdeallist.document.HotdealDocument
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
@@ -14,14 +17,31 @@ import org.springframework.stereotype.Component
 @Profile("es-migration")
 class HotdealElasticsearchMigration(
     private val hotdealRepository: HotdealRepository,
-    private val hotdealSearchService: HotdealSearchService
+    private val hotdealSearchService: HotdealSearchService,
+    private val elasticsearchOperations: ElasticsearchOperations
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @EventListener(ApplicationReadyEvent::class)
     fun migrateOnStartup() {
+        deleteIndex()
+        createIndex()
         migrateAllHotdeals()
+    }
+
+    private fun deleteIndex() {
+        val indexOps = elasticsearchOperations.indexOps(HotdealDocument::class.java)
+        if (indexOps.exists()) {
+            indexOps.delete()
+            logger.info("Deleted existing hotdeals index")
+        }
+    }
+
+    private fun createIndex() {
+        val indexOps = elasticsearchOperations.indexOps(HotdealDocument::class.java)
+        indexOps.createWithMapping()
+        logger.info("Created hotdeals index with new mapping")
     }
 
     fun migrateAllHotdeals() {

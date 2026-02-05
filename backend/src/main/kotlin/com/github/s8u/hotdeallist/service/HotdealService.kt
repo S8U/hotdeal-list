@@ -16,7 +16,8 @@ class HotdealService(
     private val hotdealRawRepository: HotdealRawRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
     private val categoryRepository: CategoryRepository,
-    private val hotdealSearchService: HotdealSearchService
+    private val hotdealSearchService: HotdealSearchService,
+    private val thumbnailService: HotdealThumbnailService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -49,6 +50,12 @@ class HotdealService(
             likeCount = hotdealRaw.likeCount ?: 0,
             isEnded = hotdealRaw.isEnded ?: false,
             sourceUrl = hotdealRaw.sourceUrl,
+            thumbnailPath = thumbnailService.downloadAndStore(
+                platformType = hotdealRaw.platformType,
+                platformPostId = hotdealRaw.platformPostId,
+                thumbnailUrl = hotdealRaw.thumbnailImageUrl,
+                fallbackUrl = hotdealRaw.firstImageUrl
+            ),
             wroteAt = hotdealRaw.wroteAt
         )
 

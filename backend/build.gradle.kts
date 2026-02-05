@@ -45,6 +45,14 @@ dependencies {
     // AI
     implementation("org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M1")
 
+    // Image Processing (WebP conversion)
+    implementation("com.sksamuel.scrimage:scrimage-core:4.3.0")
+    implementation("com.sksamuel.scrimage:scrimage-webp:4.3.0")
+
+    // AWS S3 (Cloudflare R2 compatible)
+    implementation(platform("software.amazon.awssdk:bom:2.29.51"))
+    implementation("software.amazon.awssdk:s3")
+
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")

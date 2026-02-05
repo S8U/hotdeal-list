@@ -14,7 +14,8 @@ class HotdealSearchService(
     private val hotdealElasticsearchRepository: HotdealElasticsearchRepository,
     private val hotdealCategoryRepository: HotdealCategoryRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val thumbnailService: HotdealThumbnailService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -22,6 +23,7 @@ class HotdealSearchService(
     fun indexHotdeal(hotdeal: Hotdeal) {
         val categoryCodes = getCategoryCodes(hotdeal.id!!)
         val shoppingPlatform = getShoppingPlatform(hotdeal.hotdealRawId)
+        val thumbnailUrl = thumbnailService.getThumbnailUrl(hotdeal.thumbnailPath)
 
         val document = HotdealDocument(
             id = hotdeal.id!!,
@@ -40,6 +42,7 @@ class HotdealSearchService(
             likeCount = hotdeal.likeCount,
             isEnded = hotdeal.isEnded,
             sourceUrl = hotdeal.sourceUrl,
+            thumbnailUrl = thumbnailUrl,
             wroteAt = hotdeal.wroteAt,
             createdAt = hotdeal.createdAt!!,
             updatedAt = hotdeal.updatedAt!!,
@@ -56,6 +59,7 @@ class HotdealSearchService(
 
         if (existingDocument.isPresent) {
             val document = existingDocument.get()
+            val thumbnailUrl = thumbnailService.getThumbnailUrl(hotdeal.thumbnailPath)
             val updatedDocument = HotdealDocument(
                 id = document.id,
                 hotdealRawId = document.hotdealRawId,
@@ -73,6 +77,7 @@ class HotdealSearchService(
                 likeCount = hotdeal.likeCount,
                 isEnded = hotdeal.isEnded,
                 sourceUrl = document.sourceUrl,
+                thumbnailUrl = thumbnailUrl,
                 wroteAt = document.wroteAt,
                 createdAt = document.createdAt,
                 updatedAt = hotdeal.updatedAt!!,
@@ -96,6 +101,7 @@ class HotdealSearchService(
         val documents = hotdeals.map { hotdeal ->
             val categoryCodes = getCategoryCodes(hotdeal.id!!)
             val shoppingPlatform = getShoppingPlatform(hotdeal.hotdealRawId)
+            val thumbnailUrl = thumbnailService.getThumbnailUrl(hotdeal.thumbnailPath)
 
             HotdealDocument(
                 id = hotdeal.id!!,
@@ -114,6 +120,7 @@ class HotdealSearchService(
                 likeCount = hotdeal.likeCount,
                 isEnded = hotdeal.isEnded,
                 sourceUrl = hotdeal.sourceUrl,
+                thumbnailUrl = thumbnailUrl,
                 wroteAt = hotdeal.wroteAt,
                 createdAt = hotdeal.createdAt!!,
                 updatedAt = hotdeal.updatedAt!!,
