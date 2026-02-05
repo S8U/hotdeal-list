@@ -209,3 +209,23 @@ Phase 6: 소셜 로그인
     ↓
 Phase 7: 웹 푸시 알림
 ```
+
+---
+
+## 백로그 (순서 미정)
+
+### ES 검색 품질 개선
+
+**문제**: 현재 ngram_analyzer로 저장하고 standard로 검색하여 일부 검색어가 매칭 안 됨
+
+**개선 방향**:
+- 한국어: nori (형태소 분석기) 메인
+- 영어: standard 메인
+- 서브: edge_ngram (부분 매칭, 자동완성용)
+
+**태스크**:
+- [ ] nori 플러그인 설치 및 설정
+- [ ] 필드별 multi-field 매핑 (main + edge_ngram 서브필드)
+- [ ] multi_match 쿼리 최적화 (title, productName, titleEn, productNameEn)
+- [ ] 검색 스코어링 튜닝 (boost 값 조정)
+- [ ] 동의어 사전 적용 검토
