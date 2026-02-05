@@ -2,13 +2,16 @@ package com.github.s8u.hotdeallist.service
 
 import co.elastic.clients.elasticsearch._types.FieldValue
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery
+import co.elastic.clients.elasticsearch._types.query_dsl.Like
 import co.elastic.clients.elasticsearch._types.query_dsl.Query
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.ObjectMapper
+import com.github.s8u.hotdeallist.exception.BusinessException
 import com.github.s8u.hotdeallist.document.HotdealDocument
 import com.github.s8u.hotdeallist.dto.request.HotdealSearchRequest
 import com.github.s8u.hotdeallist.dto.response.HotdealListResponse
 import com.github.s8u.hotdeallist.dto.response.HotdealResponse
+import com.github.s8u.hotdeallist.dto.response.PriceHistoryResponse
 import com.github.s8u.hotdeallist.entity.Hotdeal
 import com.github.s8u.hotdeallist.repository.HotdealCategoryRepository
 import com.github.s8u.hotdeallist.repository.HotdealElasticsearchRepository
@@ -20,6 +23,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.elasticsearch.client.elc.NativeQuery
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.Base64
 
 @Service
@@ -186,6 +191,87 @@ class HotdealSearchService(
 
     fun findById(id: Long): HotdealDocument? {
         return hotdealElasticsearchRepository.findById(id).orElse(null)
+    }
+
+    fun getPriceHistory(hotdealId: Long): PriceHistoryResponse {
+        val baseDocument = hotdealElasticsearchRepository.findById(hotdealId).orElse(null)
+            ?: throw BusinessException("핫딜을 찾을 수 없습니다: $hotdealId")
+
+        val productName = baseDocument.productName ?: baseDocument.title
+        
+        val moreLikeThisQuery = buildMoreLikeThisQuery(productName)
+        
+        val nativeQuery = NativeQuery.builder()
+            .withQuery(moreLikeThisQuery)
+            .withSort(Sort.by(Sort.Direction.DESC, "wroteAt"))
+            .withPageable(PageRequest.of(0, 100))
+            .build()
+
+        val searchHits = elasticsearchOperations.search(nativeQuery, HotdealDocument::class.java)
+        val documents = searchHits.searchHits.map { it.content }
+        
+        val priceHistory = groupByDateWithHotdeals(documents)
+
+        return PriceHistoryResponse(
+            hotdealId = hotdealId,
+            productName = baseDocument.productName,
+            totalSimilarCount = searchHits.totalHits,
+            priceHistory = priceHistory
+        )
+    }
+
+    private fun buildMoreLikeThisQuery(productName: String): Query {
+        return Query.of { q ->
+            q.bool { bool ->
+                bool.must { must ->
+                    must.moreLikeThis { mlt ->
+                        mlt.fields("productName", "title")
+                            .like(
+                                Like.of { l -> l.text(productName) }
+                            )
+                            .minTermFreq(1)
+                            .maxQueryTerms(15)
+                            .minDocFreq(1)
+                            .minimumShouldMatch("30%")
+                    }
+                }
+                bool.filter { filter ->
+                    filter.exists { e -> e.field("price") }
+                }
+                bool.filter { filter ->
+                    filter.term { t -> t.field("isEnded").value(false) }
+                }
+            }
+        }
+    }
+
+    private fun groupByDateWithHotdeals(documents: List<HotdealDocument>): List<PriceHistoryResponse.DailyPriceStats> {
+        val koreaZone = java.time.ZoneId.of("Asia/Seoul")
+        
+        return documents
+            .groupBy { it.wroteAt.atZone(koreaZone).toLocalDate() }
+            .map { (date, hotdeals) ->
+                val prices = hotdeals.mapNotNull { it.price?.toDouble() }
+                
+                PriceHistoryResponse.DailyPriceStats(
+                    date = date,
+                    count = hotdeals.size,
+                    minPrice = prices.minOrNull()?.let { BigDecimal.valueOf(it).setScale(0, RoundingMode.HALF_UP) },
+                    maxPrice = prices.maxOrNull()?.let { BigDecimal.valueOf(it).setScale(0, RoundingMode.HALF_UP) },
+                    avgPrice = prices.takeIf { it.isNotEmpty() }?.average()?.let { BigDecimal.valueOf(it).setScale(0, RoundingMode.HALF_UP) },
+                    hotdeals = hotdeals.map { doc ->
+                        PriceHistoryResponse.HotdealSummary(
+                            id = doc.id,
+                            title = doc.title,
+                            productName = doc.productName,
+                            price = doc.price,
+                            url = doc.url,
+                            thumbnailUrl = doc.thumbnailUrl
+                        )
+                    }.sortedByDescending { it.price }
+                )
+            }
+            .sortedByDescending { it.date }
     }
 
     private fun buildSearchQuery(request: HotdealSearchRequest, searchAfter: List<Any>?): NativeQuery {

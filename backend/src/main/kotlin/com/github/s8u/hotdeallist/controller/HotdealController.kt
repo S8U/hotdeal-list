@@ -3,6 +3,7 @@ package com.github.s8u.hotdeallist.controller
 import com.github.s8u.hotdeallist.dto.request.HotdealSearchRequest
 import com.github.s8u.hotdeallist.dto.response.HotdealListResponse
 import com.github.s8u.hotdeallist.dto.response.HotdealResponse
+import com.github.s8u.hotdeallist.dto.response.PriceHistoryResponse
 import com.github.s8u.hotdeallist.exception.BusinessException
 import com.github.s8u.hotdeallist.service.HotdealSearchService
 import io.swagger.v3.oas.annotations.Operation
@@ -58,6 +59,15 @@ class HotdealController(
             createdAt = document.createdAt
         )
         
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{id}/price-history")
+    @Operation(summary = "가격 히스토리 조회", description = "유사 상품명 기반 날짜별 가격 추이 조회")
+    fun getPriceHistory(
+        @Parameter(description = "핫딜 ID") @PathVariable id: Long
+    ): ResponseEntity<PriceHistoryResponse> {
+        val response = hotdealSearchService.getPriceHistory(id)
         return ResponseEntity.ok(response)
     }
 }

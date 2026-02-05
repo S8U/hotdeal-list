@@ -10,7 +10,7 @@
 | 썸네일 다운로드 + 스토리지 | ✅ 완료 | Phase 1.5 |
 | 핫딜 조회 API | ✅ 완료 | Phase 2 |
 | 필터 + 검색 | ✅ 완료 | Phase 3 |
-| 가격 히스토리 | ❌ 미구현 | Phase 4 |
+| 가격 히스토리 | ✅ 완료 | Phase 4 |
 | JWT 인증 | ❌ 미구현 | Phase 5 |
 | 소셜 로그인 | ❌ 미구현 | Phase 6 |
 | 웹 푸시 알림 | ❌ 미구현 | Phase 7 |
@@ -127,13 +127,18 @@
 
 ### 태스크
 
-- [ ] 4-1. 상품명 유사도 검색 ES 쿼리 (match_phrase, more_like_this)
-- [ ] 4-2. 가격 히스토리 API (`GET /api/v1/hotdeals/{id}/price-history`)
-- [ ] 4-3. 가격 집계 로직 (날짜별 그룹핑)
+- [x] 4-1. 상품명 유사도 검색 ES 쿼리 (match_phrase, more_like_this)
+- [x] 4-2. 가격 히스토리 API (`GET /api/v1/hotdeals/{id}/price-history`)
+- [x] 4-3. 가격 집계 로직 (날짜별 그룹핑)
 
 ### 테스트 기준
-- [ ] 특정 핫딜의 유사 상품 목록 반환
-- [ ] 날짜별 가격 데이터 반환
+- [x] 특정 핫딜의 유사 상품 목록 반환
+- [x] 날짜별 가격 데이터 반환
+
+### 관련 파일
+- `backend/src/main/kotlin/.../dto/response/PriceHistoryResponse.kt` - 가격 히스토리 응답 DTO
+- `backend/src/main/kotlin/.../service/HotdealSearchService.kt` - getPriceHistory 메서드 추가
+- `backend/src/main/kotlin/.../controller/HotdealController.kt` - /price-history 엔드포인트 추가
 
 ---
 
@@ -210,9 +215,9 @@ Phase 2: 핫딜 조회 API (ES 기반) ✅ 완료
     ↓
 Phase 3: 필터 + 검색 ✅ 완료
     ↓
-Phase 4: 가격 히스토리 ← 현재
+Phase 4: 가격 히스토리 ✅ 완료
     ↓
-Phase 5: JWT 인증
+Phase 5: JWT 인증 ← 현재
     ↓
 Phase 6: 소셜 로그인
     ↓
@@ -238,3 +243,32 @@ Phase 7: 웹 푸시 알림
 - [ ] multi_match 쿼리 최적화 (title, productName, titleEn, productNameEn)
 - [ ] 검색 스코어링 튜닝 (boost 값 조정)
 - [ ] 동의어 사전 적용 검토
+
+---
+
+### 가격 히스토리 유사도 검색 튜닝
+
+**문제**: more_like_this 쿼리의 유사도 정확도가 낮음. LG 모니터 검색 시 삼성 모니터 등 관련 없는 상품이 포함됨.
+
+**현재 설정**:
+```kotlin
+mlt.fields("productName", "title")
+   .minTermFreq(1)
+   .maxQueryTerms(15)
+   .minDocFreq(1)
+   .minimumShouldMatch("30%")
+```
+
+**개선 방향**:
+- minimumShouldMatch 비율 상향 (30% → 50~70%)
+- 브랜드명/모델명 가중치 부여
+- 카테고리 필터 추가 (동일 카테고리 내에서만 검색)
+- stop words 설정 (일반적인 단어 제외)
+- boost_terms 활용하여 중요 키워드 강조
+
+**태스크**:
+- [ ] minimumShouldMatch 파라미터 튜닝 테스트
+- [ ] 카테고리 기반 필터 추가 (동일 카테고리 우선)
+- [ ] 브랜드명 추출 및 필터링 로직 검토
+- [ ] maxQueryTerms, minTermFreq 파라미터 최적화
+- [ ] 검색 결과 품질 평가 기준 수립
