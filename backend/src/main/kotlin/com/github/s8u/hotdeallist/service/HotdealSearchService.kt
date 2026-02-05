@@ -1,13 +1,26 @@
 package com.github.s8u.hotdeallist.service
 
+import co.elastic.clients.elasticsearch._types.FieldValue
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery
+import co.elastic.clients.elasticsearch._types.query_dsl.Query
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.ObjectMapper
 import com.github.s8u.hotdeallist.document.HotdealDocument
+import com.github.s8u.hotdeallist.dto.request.HotdealSearchRequest
+import com.github.s8u.hotdeallist.dto.response.HotdealListResponse
+import com.github.s8u.hotdeallist.dto.response.HotdealResponse
 import com.github.s8u.hotdeallist.entity.Hotdeal
 import com.github.s8u.hotdeallist.repository.HotdealCategoryRepository
 import com.github.s8u.hotdeallist.repository.HotdealElasticsearchRepository
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
 import com.github.s8u.hotdeallist.repository.CategoryRepository
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.elasticsearch.client.elc.NativeQuery
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.stereotype.Service
+import java.util.Base64
 
 @Service
 class HotdealSearchService(
@@ -15,7 +28,9 @@ class HotdealSearchService(
     private val hotdealCategoryRepository: HotdealCategoryRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
     private val categoryRepository: CategoryRepository,
-    private val thumbnailService: HotdealThumbnailService
+    private val thumbnailService: HotdealThumbnailService,
+    private val elasticsearchOperations: ElasticsearchOperations,
+    private val objectMapper: ObjectMapper
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -143,5 +158,147 @@ class HotdealSearchService(
     private fun getShoppingPlatform(hotdealRawId: Long): String? {
         return hotdealProcessRepository.findFirstByHotdealRawIdOrderByIdDesc(hotdealRawId)
             ?.shoppingPlatform
+    }
+
+    // ========== 검색 API 메서드 ==========
+
+    fun search(request: HotdealSearchRequest): HotdealListResponse {
+        val searchAfter = request.cursor?.let { decodeCursor(it) }
+        
+        val query = buildSearchQuery(request, searchAfter)
+        val searchHits = elasticsearchOperations.search(query, HotdealDocument::class.java)
+        
+        val items = searchHits.searchHits.map { it.content.toResponse() }
+        
+        val nextCursor = if (searchHits.hasSearchHits() && items.size == request.size) {
+            val lastHit = searchHits.searchHits.last()
+            encodeCursor(lastHit.sortValues)
+        } else {
+            null
+        }
+        
+        return HotdealListResponse(
+            items = items,
+            nextCursor = nextCursor,
+            hasMore = nextCursor != null
+        )
+    }
+
+    fun findById(id: Long): HotdealDocument? {
+        return hotdealElasticsearchRepository.findById(id).orElse(null)
+    }
+
+    private fun buildSearchQuery(request: HotdealSearchRequest, searchAfter: List<Any>?): NativeQuery {
+        val boolQuery = BoolQuery.Builder()
+
+        // 종료된 핫딜 제외 (기본)
+        if (!request.includeEnded) {
+            boolQuery.filter(
+                Query.of { q -> q.term { t -> t.field("isEnded").value(false) } }
+            )
+        }
+
+        // 카테고리 필터
+        if (!request.categories.isNullOrEmpty()) {
+            boolQuery.filter(
+                Query.of { q ->
+                    q.terms { t ->
+                        t.field("categoryCodes")
+                            .terms { tv ->
+                                tv.value(request.categories.map { FieldValue.of(it) })
+                            }
+                    }
+                }
+            )
+        }
+
+        // 플랫폼 필터
+        if (!request.platforms.isNullOrEmpty()) {
+            boolQuery.filter(
+                Query.of { q ->
+                    q.terms { t ->
+                        t.field("platformType")
+                            .terms { tv ->
+                                tv.value(request.platforms.map { FieldValue.of(it.name) })
+                            }
+                    }
+                }
+            )
+        }
+
+        // 가격 범위 필터
+        if (request.minPrice != null || request.maxPrice != null) {
+            boolQuery.filter(
+                Query.of { q ->
+                    q.range { r ->
+                        r.number { n ->
+                            var range = n.field("price")
+                            if (request.minPrice != null) {
+                                range = range.gte(request.minPrice.toDouble())
+                            }
+                            if (request.maxPrice != null) {
+                                range = range.lte(request.maxPrice.toDouble())
+                            }
+                            range
+                        }
+                    }
+                }
+            )
+        }
+
+        // 키워드 검색
+        if (!request.keyword.isNullOrBlank()) {
+            boolQuery.must(
+                Query.of { q ->
+                    q.multiMatch { m ->
+                        m.fields("title^3", "productName^2", "titleEn", "productNameEn")
+                            .query(request.keyword)
+                    }
+                }
+            )
+        }
+
+        val nativeQueryBuilder = NativeQuery.builder()
+            .withQuery(Query.of { q -> q.bool(boolQuery.build()) })
+            .withSort(Sort.by(request.sort.direction, request.sort.field))
+            .withSort(Sort.by(Sort.Direction.ASC, "id")) // tiebreaker
+            .withPageable(PageRequest.of(0, request.size))
+
+        if (searchAfter != null) {
+            nativeQueryBuilder.withSearchAfter(searchAfter)
+        }
+
+        return nativeQueryBuilder.build()
+    }
+
+    private fun encodeCursor(sortValues: List<Any>): String {
+        val json = objectMapper.writeValueAsString(sortValues)
+        return Base64.getUrlEncoder().encodeToString(json.toByteArray())
+    }
+
+    private fun decodeCursor(cursor: String): List<Any> {
+        val json = String(Base64.getUrlDecoder().decode(cursor))
+        return objectMapper.readValue(json, object : TypeReference<List<Any>>() {})
+    }
+
+    private fun HotdealDocument.toResponse(): HotdealResponse {
+        return HotdealResponse(
+            id = this.id,
+            platformType = this.platformType,
+            url = this.url,
+            title = this.title,
+            productName = this.productName,
+            price = this.price,
+            currencyUnit = this.currencyUnit,
+            viewCount = this.viewCount,
+            commentCount = this.commentCount,
+            likeCount = this.likeCount,
+            isEnded = this.isEnded,
+            thumbnailUrl = this.thumbnailUrl,
+            shoppingPlatform = this.shoppingPlatform,
+            categoryCodes = this.categoryCodes,
+            wroteAt = this.wroteAt,
+            createdAt = this.createdAt
+        )
     }
 }

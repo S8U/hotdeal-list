@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface CategoryRepository : JpaRepository<Category, Long> {
     fun findByCode(code: String): Category?
+    fun findByDepthOrderBySortOrder(depth: Int): List<Category>
+    fun findByParentIdOrderBySortOrder(parentId: Long): List<Category>
 }

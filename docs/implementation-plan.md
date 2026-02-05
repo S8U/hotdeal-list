@@ -8,8 +8,8 @@
 | AI 가공 (카테고리/상품명/번역) | ✅ 완료 | Spring AI + OpenAI |
 | Elasticsearch 연동 | ✅ 완료 | Phase 1 |
 | 썸네일 다운로드 + 스토리지 | ✅ 완료 | Phase 1.5 |
-| 핫딜 조회 API | ❌ 미구현 | Phase 2 |
-| 필터 + 검색 | ❌ 미구현 | Phase 3 |
+| 핫딜 조회 API | ✅ 완료 | Phase 2 |
+| 필터 + 검색 | ✅ 완료 | Phase 3 |
 | 가격 히스토리 | ❌ 미구현 | Phase 4 |
 | JWT 인증 | ❌ 미구현 | Phase 5 |
 | 소셜 로그인 | ❌ 미구현 | Phase 6 |
@@ -80,15 +80,24 @@
 
 ### 태스크
 
-- [ ] 2-1. 핫딜 리스트 조회 API (`GET /api/v1/hotdeals`)
-- [ ] 2-2. search_after 기반 커서 페이지네이션
-- [ ] 2-3. 핫딜 상세 조회 API (`GET /api/v1/hotdeals/{id}`)
-- [ ] 2-4. 카테고리 목록 API (`GET /api/v1/categories`)
+- [x] 2-1. 핫딜 리스트 조회 API (`GET /api/v1/hotdeals`)
+- [x] 2-2. search_after 기반 커서 페이지네이션
+- [x] 2-3. 핫딜 상세 조회 API (`GET /api/v1/hotdeals/{id}`)
+- [x] 2-4. 카테고리 목록 API (`GET /api/v1/categories`)
 
 ### 테스트 기준
-- [ ] `/api/v1/hotdeals` 호출 시 ES에서 데이터 반환
-- [ ] search_after로 다음 페이지 조회 동작
-- [ ] Swagger UI에서 API 테스트 가능
+- [x] `/api/v1/hotdeals` 호출 시 ES에서 데이터 반환
+- [x] search_after로 다음 페이지 조회 동작
+- [x] Swagger UI에서 API 테스트 가능
+
+### 관련 파일
+- `backend/src/main/kotlin/.../controller/HotdealController.kt` - 핫딜 API
+- `backend/src/main/kotlin/.../controller/CategoryController.kt` - 카테고리 API
+- `backend/src/main/kotlin/.../dto/request/HotdealSearchRequest.kt` - 검색 요청 DTO
+- `backend/src/main/kotlin/.../dto/response/HotdealResponse.kt` - 핫딜 응답 DTO
+- `backend/src/main/kotlin/.../dto/response/HotdealListResponse.kt` - 핫딜 목록 응답 DTO
+- `backend/src/main/kotlin/.../dto/response/CategoryResponse.kt` - 카테고리 응답 DTO
+- `backend/src/main/kotlin/.../enums/HotdealSortType.kt` - 정렬 타입
 
 ---
 
@@ -98,17 +107,17 @@
 
 ### 태스크
 
-- [ ] 3-1. 카테고리 필터 쿼리
-- [ ] 3-2. 가격 범위 필터 쿼리 (KRW)
-- [ ] 3-3. 커뮤니티(플랫폼) 필터 쿼리
-- [ ] 3-4. 키워드 검색 쿼리 (제목, 상품명)
-- [ ] 3-5. 복합 필터 조합 로직
+- [x] 3-1. 카테고리 필터 쿼리
+- [x] 3-2. 가격 범위 필터 쿼리 (KRW)
+- [x] 3-3. 커뮤니티(플랫폼) 필터 쿼리
+- [x] 3-4. 키워드 검색 쿼리 (제목, 상품명)
+- [x] 3-5. 복합 필터 조합 로직
 
 ### 테스트 기준
-- [ ] `?category=electronics` → 해당 카테고리만 반환
-- [ ] `?minPrice=10000&maxPrice=50000` → 가격 범위 필터
-- [ ] `?platform=COOLENJOY_JIRUM` → 해당 플랫폼 핫딜만 반환
-- [ ] `?q=아이폰` → 키워드 검색 동작
+- [x] `?categories=electronics` → 해당 카테고리만 반환
+- [x] `?minPrice=10000&maxPrice=50000` → 가격 범위 필터
+- [x] `?platforms=COOLENJOY_JIRUM` → 해당 플랫폼 핫딜만 반환
+- [x] `?keyword=아이폰` → 키워드 검색 동작
 
 ---
 
@@ -197,11 +206,11 @@ Phase 1: ES 도입 + 핫딜 인덱싱 (데이터 인프라) ✅ 완료
     ↓
 Phase 1.5: 썸네일 다운로드 + 스토리지 ✅ 완료
     ↓
-Phase 2: 핫딜 조회 API (ES 기반) ← 현재
+Phase 2: 핫딜 조회 API (ES 기반) ✅ 완료
     ↓
-Phase 3: 필터 + 검색
+Phase 3: 필터 + 검색 ✅ 완료
     ↓
-Phase 4: 가격 히스토리
+Phase 4: 가격 히스토리 ← 현재
     ↓
 Phase 5: JWT 인증
     ↓
