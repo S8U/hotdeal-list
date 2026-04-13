@@ -1,65 +1,185 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useListCategories } from "@/api/generated/category/category";
+import { useListHotdealsInfinite } from "@/api/generated/hotdeal/hotdeal";
+import type { CategoryResponse, HotdealListResponse } from "@/api/generated/model";
+import { DealGrid } from "@/components/deal/deal-grid";
+import { FilterChips, type FilterChipKey } from "@/components/filter/filter-chips";
+import {
+    FilterSidebar,
+    INITIAL_FILTER,
+    type FilterState,
+} from "@/components/filter/filter-sidebar";
+import { SiteHeader } from "@/components/layout/site-header";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
+import { getCategorySubtreeCodes } from "@/lib/categories";
+import type { CategoryNode } from "@/lib/types";
+
+type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
+
+const toCategoryNodes = (raw: CategoryWithChildren[] | undefined): CategoryNode[] => {
+    if (!raw) return [];
+    return raw
+        .filter((c) => c.code && c.name)
+        .map((c) => ({
+            code: c.code!,
+            name: c.name!,
+            children: toCategoryNodes(c.children),
+        }));
+};
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    const [filter, setFilter] = useState<FilterState>(INITIAL_FILTER);
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
+
+    const { data: categoriesRaw } = useListCategories();
+    const categoryTree = useMemo(
+        () => toCategoryNodes(categoriesRaw as CategoryWithChildren[] | undefined),
+        [categoriesRaw],
+    );
+
+    const categoryCodes = useMemo(() => {
+        if (!filter.categoryCode) return undefined;
+        const codes = getCategorySubtreeCodes(categoryTree, filter.categoryCode);
+        return codes.size ? Array.from(codes) : undefined;
+    }, [categoryTree, filter.categoryCode]);
+
+    const params = useMemo(
+        () => ({
+            size: 40,
+            categories: categoryCodes,
+            platforms: filter.platforms.length ? filter.platforms : undefined,
+            minPrice: filter.priceMin ? Number(filter.priceMin) : undefined,
+            maxPrice: filter.priceMax ? Number(filter.priceMax) : undefined,
+        }),
+        [categoryCodes, filter.platforms, filter.priceMin, filter.priceMax],
+    );
+
+    const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        useListHotdealsInfinite(params, {
+            query: {
+                initialPageParam: undefined,
+                getNextPageParam: (lastPage: HotdealListResponse) =>
+                    lastPage.hasMore ? lastPage.nextCursor : undefined,
+            },
+        });
+
+    const deals = useMemo(
+        () => data?.pages.flatMap((p: HotdealListResponse) => p.items ?? []) ?? [],
+        [data],
+    );
+
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { rootMargin: "400px" },
+        );
+        io.observe(el);
+        return () => io.disconnect();
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+    const openChipSheet = (key: FilterChipKey) => {
+        setActiveChip(key);
+        setSheetOpen(true);
+    };
+
+    return (
+        <div className="min-h-screen bg-background">
+            <SiteHeader
+                mobileSlot={
+                    <FilterChips
+                        categoryTree={categoryTree}
+                        value={filter}
+                        onOpen={openChipSheet}
+                        onReset={() => setFilter(INITIAL_FILTER)}
+                    />
+                }
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 pt-2 pb-6 sm:px-6 sm:pt-3">
+                <FilterSidebar
+                    categoryTree={categoryTree}
+                    value={filter}
+                    onChange={setFilter}
+                    className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-auto py-1 pr-2 lg:block"
+                />
+
+                <main className="min-w-0 flex-1">
+                    {isError ? (
+                        <div className="flex min-h-60 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+                            핫딜을 불러오지 못했습니다.
+                        </div>
+                    ) : isLoading ? (
+                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
+                            불러오는 중...
+                        </div>
+                    ) : (
+                        <>
+                            <DealGrid
+                                deals={deals}
+                                categoryTree={categoryTree}
+                                onCategoryClick={(categoryCode) =>
+                                    setFilter({ ...INITIAL_FILTER, categoryCode })
+                                }
+                            />
+                            <div ref={sentinelRef} className="h-10" />
+                            {isFetchingNextPage ? (
+                                <div className="py-4 text-center text-sm text-muted-foreground">
+                                    불러오는 중...
+                                </div>
+                            ) : null}
+                        </>
+                    )}
+                </main>
+            </div>
+
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                <SheetContent
+                    side="bottom"
+                    showCloseButton={false}
+                    className={
+                        activeChip === "category"
+                            ? "flex !h-[75vh] flex-col rounded-t-2xl px-5 pt-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+                            : "flex max-h-[85vh] flex-col rounded-t-2xl px-5 pt-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+                    }
+                >
+                    <SheetHeader className="px-0 py-0">
+                        <SheetTitle className="text-xl font-bold leading-none text-foreground">
+                            {activeChip === "category"
+                                ? "카테고리"
+                                : activeChip === "price"
+                                  ? "가격 범위"
+                                  : activeChip === "community"
+                                    ? "커뮤니티"
+                                    : "필터"}
+                        </SheetTitle>
+                    </SheetHeader>
+                    <FilterSidebar
+                        categoryTree={categoryTree}
+                        value={filter}
+                        onChange={setFilter}
+                        onApply={() => setSheetOpen(false)}
+                        className="flex min-h-0 flex-1 flex-col"
+                        only={activeChip ?? undefined}
+                        hideTitle
+                    />
+                </SheetContent>
+            </Sheet>
         </div>
-      </main>
-    </div>
-  );
+    );
 }
