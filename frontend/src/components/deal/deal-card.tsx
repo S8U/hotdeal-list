@@ -1,9 +1,9 @@
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, MessageCircle, ThumbsUp } from "lucide-react";
 
 import type { HotdealResponse } from "@/api/generated/model";
 import { findCategoryPath, pickLeafCode } from "@/lib/categories";
 import type { PlatformType } from "@/lib/communities";
-import { formatPrice } from "@/lib/format";
+import { formatCompact, formatPrice, formatRelativeTime } from "@/lib/format";
 import type { CategoryNode } from "@/lib/types";
 
 import { CommunityTag } from "./community-tag";
@@ -31,10 +31,10 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
             : null;
 
     return (
-        <div className="group flex flex-col gap-2">
+        <div className="group flex gap-3 sm:gap-4">
             <a
                 href={deal.url}
-                className="relative block aspect-square w-full overflow-hidden rounded-md bg-black/3"
+                className="relative block size-24 shrink-0 overflow-hidden rounded-md bg-black/3 sm:size-28"
                 aria-label={deal.title}
                 target="_blank"
                 rel="noreferrer"
@@ -49,12 +49,12 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
                     />
                 ) : (
                     <div className="flex size-full items-center justify-center text-muted-foreground">
-                        <ImageIcon className="size-10" aria-hidden />
+                        <ImageIcon className="size-8" aria-hidden />
                     </div>
                 )}
             </a>
 
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex flex-wrap items-center gap-1">
                     {leafCode && onCategoryClick ? (
                         <button
@@ -88,11 +88,34 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
                     </h3>
                 </a>
 
-                {typeof deal.price === "number" && deal.price > 0 ? (
-                    <p className="mt-2 text-base font-bold text-foreground sm:text-lg">
-                        {formatPrice(deal.price)}
-                    </p>
-                ) : null}
+                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                    {typeof deal.price === "number" && deal.price > 0 ? (
+                        <p className="text-base font-bold text-foreground sm:text-lg">
+                            {formatPrice(deal.price)}
+                        </p>
+                    ) : (
+                        <span />
+                    )}
+                    <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                        {typeof deal.likeCount === "number" && deal.likeCount > 0 ? (
+                            <span className="inline-flex items-center gap-0.5">
+                                <ThumbsUp className="size-3" />
+                                {formatCompact(deal.likeCount)}
+                            </span>
+                        ) : null}
+                        {typeof deal.commentCount === "number" && deal.commentCount > 0 ? (
+                            <span className="inline-flex items-center gap-0.5">
+                                <MessageCircle className="size-3" />
+                                {formatCompact(deal.commentCount)}
+                            </span>
+                        ) : null}
+                        {deal.wroteAt ? (
+                            <time dateTime={deal.wroteAt}>
+                                {formatRelativeTime(deal.wroteAt)}
+                            </time>
+                        ) : null}
+                    </div>
+                </div>
             </div>
         </div>
     );
