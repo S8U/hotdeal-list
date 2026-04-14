@@ -2,10 +2,12 @@ package com.github.s8u.hotdeallist.scheduler
 
 import com.github.s8u.hotdeallist.service.HotdealServiceFacade
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@ConditionalOnProperty(prefix = "app", name = ["mode"], havingValue = "CRAWLING_API")
 class HotdealCrawlScheduler(
     private val hotdealServiceFacade: HotdealServiceFacade
 ) {
