@@ -16,3 +16,5 @@ export * from './listHotdealsPlatformsItem';
 export * from './listHotdealsSort';
 export * from './platformResponse';
 export * from './priceHistoryResponse';
+export * from './suggestParams';
+export * from './suggestResponse';

@@ -4,6 +4,7 @@ import com.github.s8u.hotdeallist.dto.request.HotdealSearchRequest
 import com.github.s8u.hotdeallist.dto.response.HotdealListResponse
 import com.github.s8u.hotdeallist.dto.response.HotdealResponse
 import com.github.s8u.hotdeallist.dto.response.PriceHistoryResponse
+import com.github.s8u.hotdeallist.dto.response.SuggestResponse
 import com.github.s8u.hotdeallist.exception.BusinessException
 import com.github.s8u.hotdeallist.service.HotdealSearchService
 import io.swagger.v3.oas.annotations.Operation
@@ -29,6 +30,17 @@ class HotdealController(
         @ParameterObject @Valid request: HotdealSearchRequest
     ): ResponseEntity<HotdealListResponse> {
         val response = hotdealSearchService.search(request)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/suggest")
+    @Operation(summary = "검색어 자동완성", description = "입력된 키워드로 상품명 자동완성 추천")
+    fun suggest(
+        @Parameter(description = "검색 키워드") @RequestParam q: String,
+        @Parameter(description = "추천 개수 (기본 7)") @RequestParam(defaultValue = "7") size: Int
+    ): ResponseEntity<SuggestResponse> {
+        if (q.isBlank()) return ResponseEntity.ok(SuggestResponse(emptyList()))
+        val response = hotdealSearchService.suggest(q.trim(), size.coerceIn(1, 20))
         return ResponseEntity.ok(response)
     }
 

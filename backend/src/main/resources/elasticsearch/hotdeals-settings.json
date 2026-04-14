@@ -5,6 +5,11 @@
         "type": "custom",
         "tokenizer": "ngram_tokenizer",
         "filter": ["lowercase"]
+      },
+      "suggest_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase"]
       }
     },
     "tokenizer": {

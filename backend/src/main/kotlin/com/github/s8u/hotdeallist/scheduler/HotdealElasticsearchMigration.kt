@@ -47,7 +47,7 @@ class HotdealElasticsearchMigration(
     fun migrateAllHotdeals() {
         logger.info("Starting hotdeal migration to Elasticsearch...")
 
-        val pageSize = 100
+        val pageSize = 10000
         var page = 0
         var totalMigrated = 0
 

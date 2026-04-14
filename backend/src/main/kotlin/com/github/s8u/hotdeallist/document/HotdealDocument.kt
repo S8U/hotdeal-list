@@ -3,6 +3,7 @@ package com.github.s8u.hotdeallist.document
 import com.github.s8u.hotdeallist.enums.PlatformType
 import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.*
+import org.springframework.data.elasticsearch.core.suggest.Completion
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -73,5 +74,8 @@ class HotdealDocument(
     val categoryCodes: List<String> = emptyList(),
 
     @Field(type = FieldType.Keyword)
-    val shoppingPlatform: String? = null
+    val shoppingPlatform: String? = null,
+
+    @CompletionField(analyzer = "suggest_analyzer", searchAnalyzer = "suggest_analyzer")
+    val suggest: Completion? = null
 )

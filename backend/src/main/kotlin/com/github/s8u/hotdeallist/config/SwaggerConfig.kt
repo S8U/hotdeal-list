@@ -13,7 +13,7 @@ class SwaggerConfig {
 
     @Bean
     fun openAPI(): OpenAPI {
-        val securitySchemeName = "Bearer Authentication"
+        val securitySchemeName = "BearerAuthentication"
 
         return OpenAPI()
             .info(

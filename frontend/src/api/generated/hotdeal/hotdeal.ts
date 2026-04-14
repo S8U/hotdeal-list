@@ -28,7 +28,9 @@ import type {
   HotdealListResponse,
   HotdealResponse,
   ListHotdealsParams,
-  PriceHistoryResponse
+  PriceHistoryResponse,
+  SuggestParams,
+  SuggestResponse
 } from '../model';
 
 import { customInstance } from '../../axios';
@@ -377,6 +379,100 @@ export function useGetPriceHistory<TData = Awaited<ReturnType<typeof getPriceHis
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPriceHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+/**
+ * 입력된 키워드로 상품명 자동완성 추천
+ * @summary 검색어 자동완성
+ */
+export const suggest = (
+    params: SuggestParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<SuggestResponse>(
+      {url: `/api/v1/hotdeals/suggest`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuggestQueryKey = (params?: SuggestParams,) => {
+    return [
+    `/api/v1/hotdeals/suggest`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuggestQueryOptions = <TData = Awaited<ReturnType<typeof suggest>>, TError = unknown>(params: SuggestParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuggestQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof suggest>>> = ({ signal }) => suggest(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuggestQueryResult = NonNullable<Awaited<ReturnType<typeof suggest>>>
+export type SuggestQueryError = unknown
+
+
+export function useSuggest<TData = Awaited<ReturnType<typeof suggest>>, TError = unknown>(
+ params: SuggestParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggest>>,
+          TError,
+          Awaited<ReturnType<typeof suggest>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggest<TData = Awaited<ReturnType<typeof suggest>>, TError = unknown>(
+ params: SuggestParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggest>>,
+          TError,
+          Awaited<ReturnType<typeof suggest>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggest<TData = Awaited<ReturnType<typeof suggest>>, TError = unknown>(
+ params: SuggestParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 검색어 자동완성
+ */
+
+export function useSuggest<TData = Awaited<ReturnType<typeof suggest>>, TError = unknown>(
+ params: SuggestParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggest>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuggestQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
