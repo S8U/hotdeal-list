@@ -73,7 +73,7 @@ class HotdealSearchService(
             updatedAt = hotdeal.updatedAt!!,
             categoryCodes = categoryCodes,
             shoppingPlatform = shoppingPlatform,
-            suggest = buildSuggestInput(hotdeal.productName, hotdeal.title)
+            suggest = buildSuggestInput(hotdeal.productName, hotdeal.title, hotdeal.viewCount, hotdeal.likeCount, hotdeal.commentCount)
         )
 
         hotdealElasticsearchRepository.save(document)
@@ -173,7 +173,7 @@ class HotdealSearchService(
                 updatedAt = hotdeal.updatedAt!!,
                 categoryCodes = categoryCodes,
                 shoppingPlatform = shoppingPlatform,
-                suggest = buildSuggestInput(hotdeal.productName, hotdeal.title)
+                suggest = buildSuggestInput(hotdeal.productName, hotdeal.title, hotdeal.viewCount, hotdeal.likeCount, hotdeal.commentCount)
             )
         }
 
@@ -447,11 +447,14 @@ class HotdealSearchService(
         return SuggestResponse(suggestions = suggestions)
     }
 
-    private fun buildSuggestInput(productName: String?, title: String): Completion {
+    private fun buildSuggestInput(productName: String?, title: String, viewCount: Int, likeCount: Int, commentCount: Int): Completion {
         val inputs = mutableListOf<String>()
         if (!productName.isNullOrBlank()) inputs.add(productName)
         inputs.add(title)
-        return Completion(inputs)
+        val score = viewCount + likeCount * 5 + commentCount * 2
+        val completion = Completion(inputs)
+        completion.setWeight(score.coerceAtLeast(1))
+        return completion
     }
 
     private fun HotdealDocument.toResponse(): HotdealResponse {
