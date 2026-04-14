@@ -1,4 +1,5 @@
 import type { HotdealResponse } from "@/api/generated/model";
+import type { PlatformType } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
 
 import { DealCard } from "./deal-card";
@@ -8,9 +9,10 @@ type DealGridProps = {
     categoryTree: CategoryNode[];
     platformCommunityMap: Record<string, string>;
     onCategoryClick?: (categoryCode: string) => void;
+    onCommunityClick?: (platformType: PlatformType) => void;
 };
 
-export function DealGrid({ deals, categoryTree, platformCommunityMap, onCategoryClick }: DealGridProps) {
+export function DealGrid({ deals, categoryTree, platformCommunityMap, onCategoryClick, onCommunityClick }: DealGridProps) {
     if (deals.length === 0) {
         return (
             <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
@@ -28,6 +30,7 @@ export function DealGrid({ deals, categoryTree, platformCommunityMap, onCategory
                     categoryTree={categoryTree}
                     platformCommunityMap={platformCommunityMap}
                     onCategoryClick={onCategoryClick}
+                    onCommunityClick={onCommunityClick}
                 />
             ))}
         </div>

@@ -41,9 +41,10 @@ type DealCardProps = {
     categoryTree: CategoryNode[];
     platformCommunityMap: Record<string, string>;
     onCategoryClick?: (categoryCode: string) => void;
+    onCommunityClick?: (platformType: PlatformType) => void;
 };
 
-export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryClick }: DealCardProps) {
+export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryClick, onCommunityClick }: DealCardProps) {
     const leafCode = pickLeafCode(categoryTree, deal.categoryCodes);
     const path = leafCode ? findCategoryPath(categoryTree, leafCode) : null;
     const categoryLabelShort = path ? path.at(-1)!.name : leafCode ?? "";
@@ -106,7 +107,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         <button
                             type="button"
                             onClick={() => onCategoryClick(leafCode)}
-                            className="inline-flex w-fit max-w-full items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 hover:text-primary"
+                            className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 hover:text-primary"
                         >
                             <span className="truncate">{categoryLabelShort}</span>
                         </button>
@@ -116,7 +117,11 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         </span>
                     ) : null}
                     {deal.platformType ? (
-                        <CommunityTag platformType={deal.platformType as PlatformType} platformCommunityMap={platformCommunityMap} />
+                        <CommunityTag
+                            platformType={deal.platformType as PlatformType}
+                            platformCommunityMap={platformCommunityMap}
+                            onClick={onCommunityClick ? () => onCommunityClick(deal.platformType as PlatformType) : undefined}
+                        />
                     ) : null}
                 </div>
 

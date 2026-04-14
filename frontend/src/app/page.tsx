@@ -21,7 +21,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import { getCategorySubtreeCodes } from "@/lib/categories";
-import { toCommunityGroups, toPlatformCommunityMap } from "@/lib/communities";
+import { toCommunityGroups, toPlatformCommunityMap, type PlatformType } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
@@ -153,6 +153,14 @@ export default function Home() {
                                 onCategoryClick={(categoryCode) =>
                                     setFilter({ ...INITIAL_FILTER, categoryCode })
                                 }
+                                onCommunityClick={(platformType: PlatformType) => {
+                                    const group = communityGroups.find((g) =>
+                                        g.platforms.includes(platformType),
+                                    );
+                                    if (group) {
+                                        setFilter({ ...INITIAL_FILTER, platforms: group.platforms as PlatformType[] });
+                                    }
+                                }}
                             />
                             <div ref={sentinelRef} className="h-10" />
                             {isFetchingNextPage ? (
