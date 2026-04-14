@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
     Armchair,
     Cpu,
@@ -18,6 +20,8 @@ import { findCategoryPath, pickLeafCode } from "@/lib/categories";
 import type { PlatformType } from "@/lib/communities";
 import { formatCompact, formatPrice, formatRelativeTime } from "@/lib/format";
 import type { CategoryNode } from "@/lib/types";
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { CommunityTag } from "./community-tag";
 
@@ -149,15 +153,52 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         </div>
                     </div>
                     {deal.wroteAt ? (
-                        <time
-                            dateTime={deal.wroteAt}
-                            className="shrink-0 text-xs text-muted-foreground"
-                        >
-                            {formatRelativeTime(deal.wroteAt)}
-                        </time>
+                        <TimeLabel iso={deal.wroteAt} />
                     ) : null}
                 </div>
             </div>
         </div>
+    );
+}
+
+const formatAbsolute = (iso: string) =>
+    new Date(iso).toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+
+function TimeLabel({ iso }: { iso: string }) {
+    const [showAbsolute, setShowAbsolute] = useState(false);
+
+    return (
+        <>
+            {/* 모바일: 클릭 토글 */}
+            <time
+                dateTime={iso}
+                className="shrink-0 cursor-pointer text-xs text-muted-foreground lg:hidden"
+                onClick={() => setShowAbsolute((v) => !v)}
+            >
+                {showAbsolute ? formatAbsolute(iso) : formatRelativeTime(iso)}
+            </time>
+            {/* 데스크톱: Tooltip */}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger
+                        render={
+                            <time
+                                dateTime={iso}
+                                className="hidden shrink-0 cursor-default text-xs text-muted-foreground lg:inline"
+                            >
+                                {formatRelativeTime(iso)}
+                            </time>
+                        }
+                    />
+                    <TooltipContent>{formatAbsolute(iso)}</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </>
     );
 }
