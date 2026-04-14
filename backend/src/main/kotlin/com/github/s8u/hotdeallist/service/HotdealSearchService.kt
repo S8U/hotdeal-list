@@ -22,6 +22,9 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.elasticsearch.client.elc.NativeQuery
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
+import org.springframework.data.elasticsearch.core.query.HighlightQuery
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -173,7 +176,12 @@ class HotdealSearchService(
         val query = buildSearchQuery(request, searchAfter)
         val searchHits = elasticsearchOperations.search(query, HotdealDocument::class.java)
         
-        val items = searchHits.searchHits.map { it.content.toResponse() }
+        val items = searchHits.searchHits.map { hit ->
+            hit.content.toResponse().copy(
+                highlightedTitle = hit.getHighlightField("title").firstOrNull(),
+                highlightedProductName = hit.getHighlightField("productName").firstOrNull(),
+            )
+        }
         
         val nextCursor = if (searchHits.hasSearchHits() && items.size == request.size) {
             val lastHit = searchHits.searchHits.last()
@@ -349,6 +357,20 @@ class HotdealSearchService(
             .withSort(Sort.by(request.sort.direction, request.sort.field))
             .withSort(Sort.by(Sort.Direction.ASC, "id")) // tiebreaker
             .withPageable(PageRequest.of(0, request.size))
+
+        if (!request.keyword.isNullOrBlank()) {
+            nativeQueryBuilder.withHighlightQuery(
+                HighlightQuery(
+                    Highlight(
+                        listOf(
+                            HighlightField("title"),
+                            HighlightField("productName"),
+                        )
+                    ),
+                    HotdealDocument::class.java
+                )
+            )
+        }
 
         if (searchAfter != null) {
             nativeQueryBuilder.withSearchAfter(searchAfter)

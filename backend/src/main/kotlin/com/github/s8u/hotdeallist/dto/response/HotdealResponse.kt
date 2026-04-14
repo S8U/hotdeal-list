@@ -20,5 +20,7 @@ data class HotdealResponse(
     val shoppingPlatform: String?,
     val categoryCodes: List<String>,
     val wroteAt: LocalDateTime,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val highlightedTitle: String? = null,
+    val highlightedProductName: String? = null,
 )

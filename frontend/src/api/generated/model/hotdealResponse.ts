@@ -22,5 +22,7 @@ export interface HotdealResponse {
   categoryCodes?: string[];
   wroteAt?: string;
   createdAt?: string;
+  highlightedTitle?: string;
+  highlightedProductName?: string;
   ended?: boolean;
 }

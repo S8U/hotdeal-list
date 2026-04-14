@@ -127,9 +127,16 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                     target="_blank"
                     rel="noreferrer"
                 >
-                    <h3 className="line-clamp-2 text-sm font-medium leading-snug text-zinc-700 group-hover:text-primary">
-                        {deal.title}
-                    </h3>
+                    {deal.highlightedTitle ? (
+                        <h3
+                            className="line-clamp-2 text-sm font-medium leading-snug text-zinc-700 group-hover:text-primary [&_em]:not-italic [&_em]:font-bold [&_em]:text-primary"
+                            dangerouslySetInnerHTML={{ __html: deal.highlightedTitle }}
+                        />
+                    ) : (
+                        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-zinc-700 group-hover:text-primary">
+                            {deal.title}
+                        </h3>
+                    )}
                 </a>
 
                 <div className="mt-auto flex items-center justify-between gap-2 pt-2">

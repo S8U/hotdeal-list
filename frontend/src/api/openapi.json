@@ -95,13 +95,13 @@
             "schema": {
               "type": "string",
               "description": "정렬 기준",
+              "default": "LATEST",
               "enum": [
                 "LATEST",
                 "POPULAR",
                 "COMMENTS",
                 "VIEWS"
-              ],
-              "default": "LATEST"
+              ]
             }
           },
           {
@@ -397,6 +397,12 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "highlightedTitle": {
+            "type": "string"
+          },
+          "highlightedProductName": {
+            "type": "string"
           },
           "ended": {
             "type": "boolean"
