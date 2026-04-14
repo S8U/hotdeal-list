@@ -12,7 +12,9 @@ import com.github.s8u.hotdeallist.dto.request.HotdealSearchRequest
 import com.github.s8u.hotdeallist.dto.response.HotdealListResponse
 import com.github.s8u.hotdeallist.dto.response.HotdealResponse
 import com.github.s8u.hotdeallist.dto.response.PriceHistoryResponse
+import com.github.s8u.hotdeallist.dto.response.SuggestResponse
 import com.github.s8u.hotdeallist.entity.Hotdeal
+import org.springframework.data.elasticsearch.core.suggest.Completion
 import com.github.s8u.hotdeallist.repository.HotdealCategoryRepository
 import com.github.s8u.hotdeallist.repository.HotdealElasticsearchRepository
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
@@ -70,7 +72,8 @@ class HotdealSearchService(
             createdAt = hotdeal.createdAt!!,
             updatedAt = hotdeal.updatedAt!!,
             categoryCodes = categoryCodes,
-            shoppingPlatform = shoppingPlatform
+            shoppingPlatform = shoppingPlatform,
+            suggest = buildSuggestInput(hotdeal.productName, hotdeal.title)
         )
 
         hotdealElasticsearchRepository.save(document)
@@ -105,7 +108,8 @@ class HotdealSearchService(
                 createdAt = document.createdAt,
                 updatedAt = hotdeal.updatedAt!!,
                 categoryCodes = document.categoryCodes,
-                shoppingPlatform = document.shoppingPlatform
+                shoppingPlatform = document.shoppingPlatform,
+                suggest = document.suggest
             )
 
             hotdealElasticsearchRepository.save(updatedDocument)
@@ -121,9 +125,29 @@ class HotdealSearchService(
     }
 
     fun indexAll(hotdeals: List<Hotdeal>) {
+        val hotdealIds = hotdeals.mapNotNull { it.id }
+        val rawIds = hotdeals.map { it.hotdealRawId }
+
+        // 배치 조회: N+1 방지
+        val categoryMap = hotdealCategoryRepository.findByHotdealIdIn(hotdealIds)
+            .groupBy { it.hotdealId }
+        val allCategoryIds = categoryMap.values.flatten().map { it.categoryId }.distinct()
+        val categoryCodeMap = if (allCategoryIds.isNotEmpty()) {
+            categoryRepository.findAllById(allCategoryIds).associate { it.id!! to it.code }
+        } else {
+            emptyMap()
+        }
+
+        val processMap = hotdealProcessRepository.findByHotdealRawIdIn(rawIds)
+            .groupBy { it.hotdealRawId }
+
         val documents = hotdeals.map { hotdeal ->
-            val categoryCodes = getCategoryCodes(hotdeal.id!!)
-            val shoppingPlatform = getShoppingPlatform(hotdeal.hotdealRawId)
+            val categoryCodes = categoryMap[hotdeal.id]
+                ?.mapNotNull { categoryCodeMap[it.categoryId] }
+                ?: emptyList()
+            val shoppingPlatform = processMap[hotdeal.hotdealRawId]
+                ?.maxByOrNull { it.id!! }
+                ?.shoppingPlatform
             val thumbnailUrl = thumbnailService.getThumbnailUrl(hotdeal.thumbnailPath)
 
             HotdealDocument(
@@ -148,7 +172,8 @@ class HotdealSearchService(
                 createdAt = hotdeal.createdAt!!,
                 updatedAt = hotdeal.updatedAt!!,
                 categoryCodes = categoryCodes,
-                shoppingPlatform = shoppingPlatform
+                shoppingPlatform = shoppingPlatform,
+                suggest = buildSuggestInput(hotdeal.productName, hotdeal.title)
             )
         }
 
@@ -387,6 +412,46 @@ class HotdealSearchService(
     private fun decodeCursor(cursor: String): List<Any> {
         val json = String(Base64.getUrlDecoder().decode(cursor))
         return objectMapper.readValue(json, object : TypeReference<List<Any>>() {})
+    }
+
+    fun suggest(query: String, size: Int = 7): SuggestResponse {
+        val suggest = co.elastic.clients.elasticsearch.core.search.Suggester.of { s ->
+            s.suggesters("hotdeal-suggest") { sg ->
+                sg.prefix(query)
+                    .completion { c ->
+                        c.field("suggest")
+                            .size(size)
+                            .skipDuplicates(true)
+                    }
+            }
+        }
+
+        val request = co.elastic.clients.elasticsearch.core.SearchRequest.of { r ->
+            r.index("hotdeals")
+                .size(0)
+                .suggest(suggest)
+        }
+
+        val client = (elasticsearchOperations as org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate)
+            .execute { it }
+
+        val response = client.search(request, HotdealDocument::class.java)
+
+        val suggestions = response.suggest()["hotdeal-suggest"]
+            ?.flatMap { entry ->
+                entry.completion().options().map { it.text() }
+            }
+            ?.distinct()
+            ?: emptyList()
+
+        return SuggestResponse(suggestions = suggestions)
+    }
+
+    private fun buildSuggestInput(productName: String?, title: String): Completion {
+        val inputs = mutableListOf<String>()
+        if (!productName.isNullOrBlank()) inputs.add(productName)
+        inputs.add(title)
+        return Completion(inputs)
     }
 
     private fun HotdealDocument.toResponse(): HotdealResponse {

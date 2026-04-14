@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface HotdealProcessRepository : JpaRepository<HotdealProcess, Long> {
     fun findFirstByHotdealRawIdOrderByIdDesc(hotdealRawId: Long): HotdealProcess?
+    fun findByHotdealRawIdIn(hotdealRawIds: List<Long>): List<HotdealProcess>
 }
