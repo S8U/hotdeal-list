@@ -11,5 +11,7 @@ enum class PlatformType(
     QUASARZONE_TASEYO("퀘이사존 타세요"),
     RULIWEB_HOTDEAL("루리웹 핫딜"),
     PPOMPPU_PPOMPPU("뽐뿌 뽐뿌게시판"),
+    PPOMPPU_HOTDEAL("뽐뿌 국내핫딜"),
+    PPOMPPU_OVERSEAS_HOTDEAL("뽐뿌 해외핫딜"),
     CLIEN_ALTTEUL("클리앙 알뜰구매")
 }
