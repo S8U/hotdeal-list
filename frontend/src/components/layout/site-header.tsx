@@ -3,16 +3,23 @@
 import {
     ArrowLeftIcon,
     BellIcon,
+    ClockCounterClockwiseIcon,
     FireIcon,
-    ListIcon,
     MagnifyingGlassIcon,
     UserIcon,
+    XIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+    addRecentSearch,
+    clearRecentSearches,
+    getRecentSearches,
+    removeRecentSearch,
+} from "@/lib/recent-searches";
 import {
     Sheet,
     SheetContent,
@@ -31,11 +38,47 @@ type SiteHeaderProps = {
 export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderProps) {
     const [searchOpen, setSearchOpen] = useState(false);
     const [draft, setDraft] = useState(keyword);
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [desktopFocused, setDesktopFocused] = useState(false);
+    const desktopWrapperRef = useRef<HTMLDivElement>(null);
 
-    const handleSubmit = (value: string) => {
-        onSearch?.(value.trim());
+    useEffect(() => {
+        setRecentSearches(getRecentSearches());
+    }, []);
+
+    useEffect(() => {
+        if (!desktopFocused) return;
+        const onPointerDown = (e: PointerEvent) => {
+            if (desktopWrapperRef.current && !desktopWrapperRef.current.contains(e.target as Node)) {
+                setDesktopFocused(false);
+            }
+        };
+        document.addEventListener("pointerdown", onPointerDown);
+        return () => document.removeEventListener("pointerdown", onPointerDown);
+    }, [desktopFocused]);
+
+    const handleSubmit = useCallback((value: string) => {
+        const trimmed = value.trim();
+        if (trimmed) {
+            setRecentSearches(addRecentSearch(trimmed));
+        }
+        onSearch?.(trimmed);
         setSearchOpen(false);
-    };
+        setDesktopFocused(false);
+    }, [onSearch]);
+
+    const handleRecentClick = useCallback((value: string) => {
+        setDraft(value);
+        handleSubmit(value);
+    }, [handleSubmit]);
+
+    const handleRemoveRecent = useCallback((value: string) => {
+        setRecentSearches(removeRecentSearch(value));
+    }, []);
+
+    const handleClearRecent = useCallback(() => {
+        setRecentSearches(clearRecentSearches());
+    }, []);
     const [slotHidden, setSlotHidden] = useState(false);
     const lastYRef = useRef(0);
 
@@ -66,7 +109,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                         <span>핫딜리스트</span>
                     </a>
 
-                    <div className="relative mx-auto hidden w-full max-w-xl md:block">
+                    <div ref={desktopWrapperRef} className="relative mx-auto hidden w-full max-w-xl md:block">
                         <MagnifyingGlassIcon
                             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                             weight={ICON_WEIGHT}
@@ -76,11 +119,49 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             placeholder="상품/키워드 검색"
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
+                            onFocus={() => setDesktopFocused(true)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") handleSubmit(draft);
                             }}
                             className="h-10 rounded-full border-0 bg-muted pl-9 shadow-none focus-visible:ring-0"
                         />
+                        {desktopFocused && recentSearches.length > 0 && (
+                            <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-xl border bg-background py-2 shadow-lg">
+                                <div className="flex items-center justify-between px-4 pb-1">
+                                    <span className="text-xs font-medium text-muted-foreground">최근 검색어</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearRecent}
+                                        className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                        전체 삭제
+                                    </button>
+                                </div>
+                                {recentSearches.map((term) => (
+                                    <div
+                                        key={term}
+                                        className="group flex items-center gap-2 px-4 py-1.5 hover:bg-muted"
+                                    >
+                                        <ClockCounterClockwiseIcon className="size-4 shrink-0 text-muted-foreground" />
+                                        <button
+                                            type="button"
+                                            className="flex-1 cursor-pointer truncate text-left text-sm"
+                                            onClick={() => handleRecentClick(term)}
+                                        >
+                                            {term}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveRecent(term)}
+                                            className="cursor-pointer opacity-0 group-hover:opacity-100"
+                                            aria-label={`${term} 삭제`}
+                                        >
+                                            <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <nav className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
@@ -161,8 +242,50 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             />
                         </div>
                     </div>
-                    <div className="px-4 py-6 text-sm text-muted-foreground">
-                        최근 검색어가 여기에 표시됩니다.
+                    <div className="px-4 py-4">
+                        {recentSearches.length > 0 ? (
+                            <>
+                                <div className="flex items-center justify-between pb-2">
+                                    <span className="text-sm font-medium text-muted-foreground">최근 검색어</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearRecent}
+                                        className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                        전체 삭제
+                                    </button>
+                                </div>
+                                <div className="space-y-0.5">
+                                    {recentSearches.map((term) => (
+                                        <div
+                                            key={term}
+                                            className="group flex items-center gap-3 rounded-lg px-1 py-2 active:bg-muted"
+                                        >
+                                            <ClockCounterClockwiseIcon className="size-4 shrink-0 text-muted-foreground" />
+                                            <button
+                                                type="button"
+                                                className="flex-1 cursor-pointer truncate text-left text-sm"
+                                                onClick={() => handleRecentClick(term)}
+                                            >
+                                                {term}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveRecent(term)}
+                                                className="cursor-pointer p-1"
+                                                aria-label={`${term} 삭제`}
+                                            >
+                                                <XIcon className="size-4 text-muted-foreground" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <p className="py-2 text-sm text-muted-foreground">
+                                최근 검색어가 없습니다.
+                            </p>
+                        )}
                     </div>
                 </SheetContent>
             </Sheet>
