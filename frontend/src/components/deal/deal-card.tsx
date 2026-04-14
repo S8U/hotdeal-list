@@ -1,4 +1,17 @@
-import { ImageIcon, MessageCircle, ThumbsUp } from "lucide-react";
+import {
+    Armchair,
+    Cpu,
+    Gift,
+    type LucideIcon,
+    MessageCircle,
+    Package,
+    Shirt,
+    Sparkles,
+    ThumbsUp,
+    UtensilsCrossed,
+    Volleyball,
+    Wrench,
+} from "lucide-react";
 
 import type { HotdealResponse } from "@/api/generated/model";
 import { findCategoryPath, pickLeafCode } from "@/lib/categories";
@@ -7,6 +20,17 @@ import { formatCompact, formatPrice, formatRelativeTime } from "@/lib/format";
 import type { CategoryNode } from "@/lib/types";
 
 import { CommunityTag } from "./community-tag";
+
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+    electronics: Cpu,
+    auto_tools: Wrench,
+    fashion: Shirt,
+    beauty: Sparkles,
+    food: UtensilsCrossed,
+    living: Armchair,
+    hobby: Volleyball,
+    etc: Gift,
+};
 
 type DealCardProps = {
     deal: HotdealResponse;
@@ -21,6 +45,9 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
     const categoryLabelLong = path
         ? path.slice(-2).map((n) => n.name).join(" > ")
         : categoryLabelShort;
+
+    const rootCode = path?.[0]?.code;
+    const FallbackIcon = (rootCode && CATEGORY_ICON_MAP[rootCode]) || Package;
 
     // TODO: 원래는 deal.thumbnailUrl 사용 — 임시로 플랫폼/포스트ID 기반 URL 사용
     // const thumbnailUrl = deal.thumbnailUrl;
@@ -46,12 +73,22 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
                         alt={deal.productName ?? deal.title ?? ""}
                         className="size-full object-cover mix-blend-multiply transition-transform duration-200 group-hover:scale-[1.02]"
                         loading="lazy"
+                        onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement
+                                ?.querySelector<HTMLElement>("[data-fallback]")
+                                ?.style.setProperty("display", "flex");
+                        }}
                     />
-                ) : (
-                    <div className="flex size-full items-center justify-center text-muted-foreground">
-                        <ImageIcon className="size-8" aria-hidden />
-                    </div>
-                )}
+                ) : null}
+                <div
+                    data-fallback
+                    className="absolute inset-0 items-center justify-center text-zinc-300"
+                    style={{ display: thumbnailUrl ? "none" : "flex" }}
+                    aria-hidden
+                >
+                    <FallbackIcon className="size-7" strokeWidth={1.25} />
+                </div>
             </a>
 
             <div className="flex min-w-0 flex-1 flex-col">
