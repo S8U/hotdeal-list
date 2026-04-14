@@ -66,7 +66,6 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         }
         onSearch?.(trimmed);
         setSearchOpen(false);
-        setDesktopFocused(false);
     }, [onSearch]);
 
     const handleRecentClick = useCallback((value: string) => {
@@ -97,7 +96,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
 
     const { data: suggestData } = useSuggest(
         { q: debouncedDraft },
-        { query: { enabled: debouncedDraft.length >= 1 } },
+        { query: { enabled: debouncedDraft.length >= 1, placeholderData: (prev) => prev } },
     );
     const suggestions = debouncedDraft ? (suggestData?.suggestions ?? []) : [];
 
@@ -180,7 +179,9 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             onChange={(e) => setDraft(e.target.value)}
                             onFocus={() => setDesktopFocused(true)}
                             onKeyDown={(e) => {
-                                if (desktopFocused && desktopItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
+                                if (e.key === "Escape") {
+                                    setDesktopFocused(false);
+                                } else if (desktopFocused && desktopItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
                                     handleKeyNav(e, desktopItems, handleSuggestionClick);
                                 } else if (e.key === "Enter") {
                                     handleSubmit(draft);
