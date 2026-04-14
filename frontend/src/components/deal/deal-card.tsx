@@ -35,10 +35,11 @@ const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
 type DealCardProps = {
     deal: HotdealResponse;
     categoryTree: CategoryNode[];
+    platformCommunityMap: Record<string, string>;
     onCategoryClick?: (categoryCode: string) => void;
 };
 
-export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps) {
+export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryClick }: DealCardProps) {
     const leafCode = pickLeafCode(categoryTree, deal.categoryCodes);
     const path = leafCode ? findCategoryPath(categoryTree, leafCode) : null;
     const categoryLabelShort = path ? path.at(-1)!.name : leafCode ?? "";
@@ -109,7 +110,7 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
                         </span>
                     ) : null}
                     {deal.platformType ? (
-                        <CommunityTag platformType={deal.platformType as PlatformType} />
+                        <CommunityTag platformType={deal.platformType as PlatformType} platformCommunityMap={platformCommunityMap} />
                     ) : null}
                 </div>
 

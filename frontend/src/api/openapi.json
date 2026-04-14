@@ -21,11 +21,40 @@
       "description": "카테고리 API"
     },
     {
+      "name": "Platform",
+      "description": "플랫폼 API"
+    },
+    {
       "name": "Hotdeal",
       "description": "핫딜 조회 API"
     }
   ],
   "paths": {
+    "/api/v1/platforms": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "플랫폼 목록 조회",
+        "description": "지원하는 플랫폼(커뮤니티) 목록을 반환",
+        "operationId": "listPlatforms",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/hotdeals": {
       "get": {
         "tags": [
@@ -264,6 +293,27 @@
   },
   "components": {
     "schemas": {
+      "PlatformResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "플랫폼 코드",
+            "example": "COOLENJOY_JIRUM"
+          },
+          "communityName": {
+            "type": "string",
+            "description": "커뮤니티(사이트)명",
+            "example": "쿨엔조이"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "플랫폼 표시명",
+            "example": "쿨엔조이 지름"
+          }
+        },
+        "description": "플랫폼 정보"
+      },
       "HotdealListResponse": {
         "type": "object",
         "properties": {

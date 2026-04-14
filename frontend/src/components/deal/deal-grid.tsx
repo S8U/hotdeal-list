@@ -6,10 +6,11 @@ import { DealCard } from "./deal-card";
 type DealGridProps = {
     deals: HotdealResponse[];
     categoryTree: CategoryNode[];
+    platformCommunityMap: Record<string, string>;
     onCategoryClick?: (categoryCode: string) => void;
 };
 
-export function DealGrid({ deals, categoryTree, onCategoryClick }: DealGridProps) {
+export function DealGrid({ deals, categoryTree, platformCommunityMap, onCategoryClick }: DealGridProps) {
     if (deals.length === 0) {
         return (
             <div className="flex min-h-60 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
@@ -25,6 +26,7 @@ export function DealGrid({ deals, categoryTree, onCategoryClick }: DealGridProps
                     key={deal.id}
                     deal={deal}
                     categoryTree={categoryTree}
+                    platformCommunityMap={platformCommunityMap}
                     onCategoryClick={onCategoryClick}
                 />
             ))}

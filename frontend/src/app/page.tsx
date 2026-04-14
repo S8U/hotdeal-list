@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useListCategories } from "@/api/generated/category/category";
 import { useListHotdealsInfinite } from "@/api/generated/hotdeal/hotdeal";
+import { useListPlatforms } from "@/api/generated/platform/platform";
 import type { CategoryResponse, HotdealListResponse } from "@/api/generated/model";
 import { DealGrid } from "@/components/deal/deal-grid";
 import { FilterChips, type FilterChipKey } from "@/components/filter/filter-chips";
@@ -20,6 +21,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import { getCategorySubtreeCodes } from "@/lib/categories";
+import { toCommunityGroups, toPlatformCommunityMap } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
@@ -45,6 +47,10 @@ export default function Home() {
         () => toCategoryNodes(categoriesRaw as CategoryWithChildren[] | undefined),
         [categoriesRaw],
     );
+
+    const { data: platformsRaw } = useListPlatforms();
+    const communityGroups = useMemo(() => toCommunityGroups(platformsRaw), [platformsRaw]);
+    const platformCommunityMap = useMemo(() => toPlatformCommunityMap(communityGroups), [communityGroups]);
 
     const categoryCodes = useMemo(() => {
         if (!filter.categoryCode) return undefined;
@@ -104,6 +110,8 @@ export default function Home() {
                 mobileSlot={
                     <FilterChips
                         categoryTree={categoryTree}
+                        platformCommunityMap={platformCommunityMap}
+                        communityGroups={communityGroups}
                         value={filter}
                         onOpen={openChipSheet}
                         onReset={() => setFilter(INITIAL_FILTER)}
@@ -114,6 +122,7 @@ export default function Home() {
             <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 pt-2 pb-6 sm:px-6 sm:pt-3">
                 <FilterSidebar
                     categoryTree={categoryTree}
+                    communityGroups={communityGroups}
                     value={filter}
                     onChange={setFilter}
                     className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-auto py-1 pr-2 lg:block"
@@ -133,6 +142,7 @@ export default function Home() {
                             <DealGrid
                                 deals={deals}
                                 categoryTree={categoryTree}
+                                platformCommunityMap={platformCommunityMap}
                                 onCategoryClick={(categoryCode) =>
                                     setFilter({ ...INITIAL_FILTER, categoryCode })
                                 }
@@ -171,6 +181,7 @@ export default function Home() {
                     </SheetHeader>
                     <FilterSidebar
                         categoryTree={categoryTree}
+                        communityGroups={communityGroups}
                         value={filter}
                         onChange={setFilter}
                         onApply={() => setSheetOpen(false)}

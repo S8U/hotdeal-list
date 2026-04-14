@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { findCategoryPath } from "@/lib/categories";
-import { COMMUNITIES, type PlatformType } from "@/lib/communities";
+import type { CommunityGroup, PlatformType } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
 
 import { CategoryTree } from "./category-tree";
@@ -29,6 +29,7 @@ export type FilterSection = "category" | "price" | "community";
 
 type FilterSidebarProps = {
     categoryTree: CategoryNode[];
+    communityGroups: CommunityGroup[];
     value: FilterState;
     onChange: (next: FilterState) => void;
     onApply?: () => void;
@@ -39,6 +40,7 @@ type FilterSidebarProps = {
 
 export function FilterSidebar({
     categoryTree,
+    communityGroups,
     value,
     onChange,
     onApply,
@@ -54,11 +56,12 @@ export function FilterSidebar({
         return new Set(path.slice(0, -1).map((n) => n.code));
     }, [categoryTree, value.categoryCode]);
 
-    const togglePlatform = (platform: PlatformType) => {
-        const next = value.platforms.includes(platform)
-            ? value.platforms.filter((c) => c !== platform)
-            : [...value.platforms, platform];
-        onChange({ ...value, platforms: next });
+    const toggleCommunity = (group: CommunityGroup) => {
+        const allSelected = group.platforms.every((p) => value.platforms.includes(p));
+        const next = allSelected
+            ? value.platforms.filter((p) => !group.platforms.includes(p))
+            : [...value.platforms.filter((p) => !group.platforms.includes(p)), ...group.platforms];
+        onChange({ ...value, platforms: next as PlatformType[] });
     };
 
     return (
@@ -151,10 +154,10 @@ export function FilterSidebar({
                         <h3 className="text-sm font-medium text-muted-foreground">커뮤니티</h3>
                     )}
                     <ul className={only ? "space-y-1" : "space-y-1"}>
-                        {COMMUNITIES.map((c) => {
-                            const checked = value.platforms.includes(c.platformType);
+                        {communityGroups.map((g) => {
+                            const checked = g.platforms.every((p) => value.platforms.includes(p));
                             return (
-                                <li key={c.platformType}>
+                                <li key={g.communityName}>
                                     <label
                                         className={
                                             only
@@ -164,12 +167,10 @@ export function FilterSidebar({
                                     >
                                         <Checkbox
                                             checked={checked}
-                                            onCheckedChange={() =>
-                                                togglePlatform(c.platformType)
-                                            }
+                                            onCheckedChange={() => toggleCommunity(g)}
                                             className={only ? "size-5" : ""}
                                         />
-                                        <span>{c.label}</span>
+                                        <span>{g.communityName}</span>
                                     </label>
                                 </li>
                             );

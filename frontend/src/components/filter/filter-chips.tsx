@@ -4,7 +4,7 @@ import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { Button } from "@/components/ui/button";
 import { findCategoryPath } from "@/lib/categories";
-import { COMMUNITY_MAP } from "@/lib/communities";
+import type { CommunityGroup } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,8 @@ export type FilterChipKey = "category" | "price" | "community";
 
 type FilterChipsProps = {
     categoryTree: CategoryNode[];
+    platformCommunityMap: Record<string, string>;
+    communityGroups: CommunityGroup[];
     value: FilterState;
     onOpen: (key: FilterChipKey) => void;
     onReset: () => void;
@@ -29,6 +31,8 @@ const formatPriceShort = (raw: string) => {
 
 export function FilterChips({
     categoryTree,
+    platformCommunityMap,
+    communityGroups,
     value,
     onOpen,
     onReset,
@@ -50,9 +54,12 @@ export function FilterChips({
 
     const communityLabel = (() => {
         if (value.platforms.length === 0) return "커뮤니티";
-        if (value.platforms.length === 1)
-            return COMMUNITY_MAP[value.platforms[0]]?.label ?? "커뮤니티";
-        return `커뮤니티 ${value.platforms.length}`;
+        const selectedNames = new Set(
+            value.platforms.map((p) => platformCommunityMap[p]).filter(Boolean),
+        );
+        if (selectedNames.size === 1) return [...selectedNames][0];
+        if (selectedNames.size > 1) return `커뮤니티 ${selectedNames.size}`;
+        return "커뮤니티";
     })();
 
     const hasAny =
