@@ -24,10 +24,18 @@ const ICON_CLASS = "size-6 text-zinc-700";
 
 type SiteHeaderProps = {
     mobileSlot?: React.ReactNode;
+    keyword?: string;
+    onSearch?: (keyword: string) => void;
 };
 
-export function SiteHeader({ mobileSlot }: SiteHeaderProps) {
+export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderProps) {
     const [searchOpen, setSearchOpen] = useState(false);
+    const [draft, setDraft] = useState(keyword);
+
+    const handleSubmit = (value: string) => {
+        onSearch?.(value.trim());
+        setSearchOpen(false);
+    };
     const [slotHidden, setSlotHidden] = useState(false);
     const lastYRef = useRef(0);
 
@@ -66,6 +74,11 @@ export function SiteHeader({ mobileSlot }: SiteHeaderProps) {
                         <Input
                             type="search"
                             placeholder="상품/키워드 검색"
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSubmit(draft);
+                            }}
                             className="h-10 rounded-full border-0 bg-muted pl-9 shadow-none focus-visible:ring-0"
                         />
                     </div>
@@ -140,6 +153,10 @@ export function SiteHeader({ mobileSlot }: SiteHeaderProps) {
                                 autoFocus
                                 type="search"
                                 placeholder="상품/키워드 검색"
+                                defaultValue={keyword}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleSubmit(e.currentTarget.value);
+                                }}
                                 className="h-10 rounded-full bg-muted pl-9"
                             />
                         </div>

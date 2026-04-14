@@ -39,6 +39,7 @@ const toCategoryNodes = (raw: CategoryWithChildren[] | undefined): CategoryNode[
 
 export default function Home() {
     const [filter, setFilter] = useState<FilterState>(INITIAL_FILTER);
+    const [keyword, setKeyword] = useState("");
     const [sheetOpen, setSheetOpen] = useState(false);
     const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
 
@@ -61,12 +62,13 @@ export default function Home() {
     const params = useMemo(
         () => ({
             size: 40,
+            keyword: keyword || undefined,
             categories: categoryCodes,
             platforms: filter.platforms.length ? filter.platforms : undefined,
             minPrice: filter.priceMin ? Number(filter.priceMin) : undefined,
             maxPrice: filter.priceMax ? Number(filter.priceMax) : undefined,
         }),
-        [categoryCodes, filter.platforms, filter.priceMin, filter.priceMax],
+        [keyword, categoryCodes, filter.platforms, filter.priceMin, filter.priceMax],
     );
 
     const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -107,6 +109,8 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-zinc-50">
             <SiteHeader
+                keyword={keyword}
+                onSearch={setKeyword}
                 mobileSlot={
                     <FilterChips
                         categoryTree={categoryTree}
