@@ -99,7 +99,7 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-zinc-50">
             <SiteHeader
                 mobileSlot={
                     <FilterChips
@@ -121,7 +121,7 @@ export default function Home() {
 
                 <main className="min-w-0 flex-1">
                     {isError ? (
-                        <div className="flex min-h-60 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
                             핫딜을 불러오지 못했습니다.
                         </div>
                     ) : isLoading ? (

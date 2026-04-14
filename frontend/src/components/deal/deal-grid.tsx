@@ -19,7 +19,7 @@ export function DealGrid({ deals, categoryTree, onCategoryClick }: DealGridProps
     }
 
     return (
-        <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:gap-y-7 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-3 gap-y-1.5 sm:gap-y-2 lg:grid-cols-2 2xl:grid-cols-3">
             {deals.map((deal) => (
                 <DealCard
                     key={deal.id}

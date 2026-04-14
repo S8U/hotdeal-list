@@ -31,7 +31,7 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
             : null;
 
     return (
-        <div className="group flex gap-3 sm:gap-4">
+        <div className="group flex gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3">
             <a
                 href={deal.url}
                 className="relative block size-24 shrink-0 overflow-hidden rounded-md bg-black/3 sm:size-28"
@@ -89,32 +89,35 @@ export function DealCard({ deal, categoryTree, onCategoryClick }: DealCardProps)
                 </a>
 
                 <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-                    {typeof deal.price === "number" && deal.price > 0 ? (
-                        <p className="text-base font-bold text-foreground sm:text-lg">
-                            {formatPrice(deal.price)}
-                        </p>
-                    ) : (
-                        <span />
-                    )}
-                    <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                        {typeof deal.likeCount === "number" && deal.likeCount > 0 ? (
-                            <span className="inline-flex items-center gap-0.5">
-                                <ThumbsUp className="size-3" />
-                                {formatCompact(deal.likeCount)}
-                            </span>
+                    <div className="flex min-w-0 items-center gap-2">
+                        {typeof deal.price === "number" && deal.price > 0 ? (
+                            <p className="truncate text-base font-bold text-foreground sm:text-lg">
+                                {formatPrice(deal.price)}
+                            </p>
                         ) : null}
-                        {typeof deal.commentCount === "number" && deal.commentCount > 0 ? (
-                            <span className="inline-flex items-center gap-0.5">
-                                <MessageCircle className="size-3" />
-                                {formatCompact(deal.commentCount)}
-                            </span>
-                        ) : null}
-                        {deal.wroteAt ? (
-                            <time dateTime={deal.wroteAt}>
-                                {formatRelativeTime(deal.wroteAt)}
-                            </time>
-                        ) : null}
+                        <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                            {typeof deal.likeCount === "number" && deal.likeCount > 0 ? (
+                                <span className="inline-flex items-center gap-0.5">
+                                    <ThumbsUp className="size-3" />
+                                    {formatCompact(deal.likeCount)}
+                                </span>
+                            ) : null}
+                            {typeof deal.commentCount === "number" && deal.commentCount > 0 ? (
+                                <span className="inline-flex items-center gap-0.5">
+                                    <MessageCircle className="size-3" />
+                                    {formatCompact(deal.commentCount)}
+                                </span>
+                            ) : null}
+                        </div>
                     </div>
+                    {deal.wroteAt ? (
+                        <time
+                            dateTime={deal.wroteAt}
+                            className="shrink-0 text-xs text-muted-foreground"
+                        >
+                            {formatRelativeTime(deal.wroteAt)}
+                        </time>
+                    ) : null}
                 </div>
             </div>
         </div>
