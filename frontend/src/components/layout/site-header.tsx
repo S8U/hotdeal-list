@@ -106,6 +106,38 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         handleSubmit(value);
     }, [handleSubmit]);
 
+    // 키보드 네비게이션
+    const [activeIndex, setActiveIndex] = useState(-1);
+
+    // 드롭다운에 표시되는 항목 리스트 계산
+    const desktopItems = suggestions.length > 0
+        ? suggestions
+        : (!draft.trim() && recentSearches.length > 0 ? recentSearches : []);
+
+    const mobileItems = suggestions.length > 0
+        ? suggestions
+        : (!mobileDraft.trim() && recentSearches.length > 0 ? recentSearches : []);
+
+    // 항목이 바뀌면 선택 초기화
+    useEffect(() => {
+        setActiveIndex(-1);
+    }, [debouncedDraft, searchOpen]);
+
+    const handleKeyNav = useCallback((e: React.KeyboardEvent, items: string[], onSelect: (value: string) => void) => {
+        if (items.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActiveIndex((prev) => (prev + 1) % items.length);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActiveIndex((prev) => (prev <= 0 ? items.length - 1 : prev - 1));
+        } else if (e.key === "Enter" && activeIndex >= 0 && activeIndex < items.length) {
+            e.preventDefault();
+            onSelect(items[activeIndex]);
+        }
+    }, [activeIndex]);
+
     const [slotHidden, setSlotHidden] = useState(false);
     const lastYRef = useRef(0);
 
@@ -148,7 +180,11 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             onChange={(e) => setDraft(e.target.value)}
                             onFocus={() => setDesktopFocused(true)}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSubmit(draft);
+                                if (desktopFocused && desktopItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
+                                    handleKeyNav(e, desktopItems, handleSuggestionClick);
+                                } else if (e.key === "Enter") {
+                                    handleSubmit(draft);
+                                }
                             }}
                             className="h-10 rounded-full border-0 bg-muted pl-9 shadow-none focus-visible:ring-0"
                         />
@@ -159,10 +195,10 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                         <div className="px-4 pb-1">
                                             <span className="text-xs font-medium text-muted-foreground">추천 검색어</span>
                                         </div>
-                                        {suggestions.map((term) => (
+                                        {suggestions.map((term, i) => (
                                             <div
                                                 key={term}
-                                                className="flex items-center gap-2 px-4 py-1.5 hover:bg-muted"
+                                                className={cn("flex items-center gap-2 px-4 py-1.5 hover:bg-muted", activeIndex === i && "bg-muted")}
                                             >
                                                 <MagnifyingGlassIcon className="size-4 shrink-0 text-muted-foreground" weight={ICON_WEIGHT} />
                                                 <button
@@ -187,10 +223,10 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                                 전체 삭제
                                             </button>
                                         </div>
-                                        {recentSearches.map((term) => (
+                                        {recentSearches.map((term, i) => (
                                             <div
                                                 key={term}
-                                                className="group flex items-center gap-2 px-4 py-1.5 hover:bg-muted"
+                                                className={cn("group flex items-center gap-2 px-4 py-1.5 hover:bg-muted", activeIndex === i && "bg-muted")}
                                             >
                                                 <ClockCounterClockwiseIcon className="size-4 shrink-0 text-muted-foreground" />
                                                 <button
@@ -292,7 +328,14 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                 value={mobileDraft}
                                 onChange={(e) => setMobileDraft(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter") handleSubmit(mobileDraft);
+                                    if (mobileItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
+                                        handleKeyNav(e, mobileItems, (value) => {
+                                            setMobileDraft(value);
+                                            handleSubmit(value);
+                                        });
+                                    } else if (e.key === "Enter") {
+                                        handleSubmit(mobileDraft);
+                                    }
                                 }}
                                 className="h-10 rounded-full bg-muted pl-9"
                             />
@@ -305,10 +348,10 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                     <span className="text-sm font-medium text-muted-foreground">추천 검색어</span>
                                 </div>
                                 <div className="space-y-0.5">
-                                    {suggestions.map((term) => (
+                                    {suggestions.map((term, i) => (
                                         <div
                                             key={term}
-                                            className="flex items-center gap-3 rounded-lg px-1 py-2 active:bg-muted"
+                                            className={cn("flex items-center gap-3 rounded-lg px-1 py-2 active:bg-muted", activeIndex === i && "bg-muted")}
                                         >
                                             <MagnifyingGlassIcon className="size-4 shrink-0 text-muted-foreground" weight={ICON_WEIGHT} />
                                             <button
@@ -338,10 +381,10 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                     </button>
                                 </div>
                                 <div className="space-y-0.5">
-                                    {recentSearches.map((term) => (
+                                    {recentSearches.map((term, i) => (
                                         <div
                                             key={term}
-                                            className="group flex items-center gap-3 rounded-lg px-1 py-2 active:bg-muted"
+                                            className={cn("group flex items-center gap-3 rounded-lg px-1 py-2 active:bg-muted", activeIndex === i && "bg-muted")}
                                         >
                                             <ClockCounterClockwiseIcon className="size-4 shrink-0 text-muted-foreground" />
                                             <button
