@@ -59,8 +59,10 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
             ? `https://swas.s8u.kr/HotDeal/api/info/thumbnail/${deal.platformType}/${postId}`
             : null;
 
+    const ended = !!deal.ended;
+
     return (
-        <div className="group flex gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3">
+        <div className={`group flex gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3${ended ? " opacity-60" : ""}`}>
             <a
                 href={deal.url}
                 className="relative block size-24 shrink-0 overflow-hidden rounded-md bg-black/3 sm:size-28"
@@ -91,6 +93,11 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                 >
                     <FallbackIcon className="size-7" strokeWidth={1.25} />
                 </div>
+                {ended ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50">
+                        <span className="text-xs font-semibold text-white">종료</span>
+                    </div>
+                ) : null}
             </a>
 
             <div className="flex min-w-0 flex-1 flex-col">
