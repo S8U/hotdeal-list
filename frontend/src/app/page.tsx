@@ -101,7 +101,10 @@ export default function Home() {
         return () => io.disconnect();
     }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+    const [pendingFilter, setPendingFilter] = useState<FilterState>(filter);
+
     const openChipSheet = (key: FilterChipKey) => {
+        setPendingFilter(filter);
         setActiveChip(key);
         setSheetOpen(true);
     };
@@ -186,9 +189,12 @@ export default function Home() {
                     <FilterSidebar
                         categoryTree={categoryTree}
                         communityGroups={communityGroups}
-                        value={filter}
-                        onChange={setFilter}
-                        onApply={() => setSheetOpen(false)}
+                        value={pendingFilter}
+                        onChange={setPendingFilter}
+                        onApply={() => {
+                            setFilter(pendingFilter);
+                            setSheetOpen(false);
+                        }}
                         className="flex min-h-0 flex-1 flex-col"
                         only={activeChip ?? undefined}
                         hideTitle
