@@ -85,7 +85,7 @@ function CategoryTreeItem({
                         type="button"
                         onClick={() => setOpen((v) => !v)}
                         className={cn(
-                            "flex shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted",
+                            "flex shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-muted",
                             lg ? "size-7" : "size-5",
                         )}
                         aria-label={open ? "접기" : "펼치기"}
@@ -109,7 +109,7 @@ function CategoryTreeItem({
                     type="button"
                     onClick={() => onChange(isActive ? null : node.code)}
                     className={cn(
-                        "flex-1 truncate text-left hover:text-foreground",
+                        "flex-1 cursor-pointer truncate text-left hover:text-foreground",
                         isActive ? "font-medium text-primary" : "text-foreground/80",
                     )}
                 >
