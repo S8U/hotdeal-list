@@ -13,7 +13,7 @@ type DealGridProps = {
 export function DealGrid({ deals, categoryTree, platformCommunityMap, onCategoryClick }: DealGridProps) {
     if (deals.length === 0) {
         return (
-            <div className="flex min-h-60 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+            <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
                 조건에 맞는 핫딜이 없습니다.
             </div>
         );
