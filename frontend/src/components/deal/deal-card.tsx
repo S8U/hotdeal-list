@@ -47,9 +47,6 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
     const leafCode = pickLeafCode(categoryTree, deal.categoryCodes);
     const path = leafCode ? findCategoryPath(categoryTree, leafCode) : null;
     const categoryLabelShort = path ? path.at(-1)!.name : leafCode ?? "";
-    const categoryLabelLong = path
-        ? path.slice(-2).map((n) => n.name).join(" > ")
-        : categoryLabelShort;
 
     const rootCode = path?.[0]?.code;
     const FallbackIcon = (rootCode && CATEGORY_ICON_MAP[rootCode]) || Package;
@@ -104,13 +101,11 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                             onClick={() => onCategoryClick(leafCode)}
                             className="inline-flex w-fit max-w-full items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 hover:text-primary"
                         >
-                            <span className="truncate lg:hidden">{categoryLabelShort}</span>
-                            <span className="hidden truncate lg:inline">{categoryLabelLong}</span>
+                            <span className="truncate">{categoryLabelShort}</span>
                         </button>
                     ) : categoryLabelShort ? (
                         <span className="inline-flex w-fit max-w-full items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500">
-                            <span className="truncate lg:hidden">{categoryLabelShort}</span>
-                            <span className="hidden truncate lg:inline">{categoryLabelLong}</span>
+                            <span className="truncate">{categoryLabelShort}</span>
                         </span>
                     ) : null}
                     {deal.platformType ? (
