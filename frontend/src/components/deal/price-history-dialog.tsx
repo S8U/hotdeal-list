@@ -40,19 +40,19 @@ export function PriceHistoryButton({ hotdealId, productName }: PriceHistoryDialo
                 render={
                     <button
                         type="button"
-                        className="relative z-10 inline-flex cursor-pointer items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-primary"
+                        className="relative z-10 inline-flex cursor-pointer items-center gap-0.5 text-xs text-muted-foreground hover:text-primary"
                         aria-label="가격 추이"
                     >
-                        <TrendingUp className="size-3.5" />
+                        <TrendingUp className="size-3" />
                     </button>
                 }
             />
             <DialogPortal>
                 <DialogOverlay />
                 <DialogContent className="max-w-lg">
-                    <DialogHeader>
+                    <DialogHeader className="overflow-hidden">
                         <DialogTitle className="text-base">가격 추이</DialogTitle>
-                        <DialogDescription className="truncate text-sm">
+                        <DialogDescription className="min-w-0 truncate text-sm">
                             {productName ?? ""}
                         </DialogDescription>
                     </DialogHeader>
@@ -84,6 +84,14 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
         );
     }
 
+    if ((data.totalSimilarCount ?? 0) <= 1) {
+        return (
+            <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+                가격 데이터가 부족합니다
+            </div>
+        );
+    }
+
     const chartData = [...data.priceHistory]
         .reverse()
         .map((d) => ({
@@ -100,11 +108,49 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
     const globalMax = Math.max(...allPrices);
     const globalAvg = chartData.reduce((sum, d) => sum + d.avg, 0) / chartData.length;
 
+    const minIndex = chartData.findIndex((d) => d.avg === globalMin || d.min === globalMin);
+    const maxIndex = chartData.findIndex((d) => d.avg === globalMax || d.max === globalMax);
+
+    const total = chartData.length;
+
+    const getAnchor = (index: number) => {
+        if (index <= 1) return "start";
+        if (index >= total - 2) return "end";
+        return "middle";
+    };
+
+    const renderDot = (props: any) => {
+        const { cx, cy, index } = props;
+        if (index === minIndex) {
+            const anchor = getAnchor(index);
+            return (
+                <g key={`dot-min-${index}`}>
+                    <circle cx={cx} cy={cy} r={4} fill="#2563eb" stroke="#fff" strokeWidth={2} />
+                    <text x={cx} y={cy + 16} textAnchor={anchor} fill="#2563eb" fontSize={10} fontWeight={600}>
+                        최저 {formatPrice(globalMin)}
+                    </text>
+                </g>
+            );
+        }
+        if (index === maxIndex) {
+            const anchor = getAnchor(index);
+            return (
+                <g key={`dot-max-${index}`}>
+                    <circle cx={cx} cy={cy} r={4} fill="#ef4444" stroke="#fff" strokeWidth={2} />
+                    <text x={cx} y={cy - 8} textAnchor={anchor} fill="#ef4444" fontSize={10} fontWeight={600}>
+                        최고 {formatPrice(globalMax)}
+                    </text>
+                </g>
+            );
+        }
+        return <circle key={`dot-${index}`} cx={cx} cy={cy} r={3} fill="hsl(var(--primary))" />;
+    };
+
     return (
         <div className="space-y-3">
-            <div className="h-52">
+            <div className="h-64 [&_svg]:overflow-visible">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 25, right: 15, left: 0, bottom: 20 }}>
                         <defs>
                             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
@@ -132,7 +178,7 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
                             stroke="hsl(var(--primary))"
                             strokeWidth={2}
                             fill="url(#priceGradient)"
-                            dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                            dot={renderDot}
                             activeDot={{ r: 5 }}
                         />
                     </AreaChart>

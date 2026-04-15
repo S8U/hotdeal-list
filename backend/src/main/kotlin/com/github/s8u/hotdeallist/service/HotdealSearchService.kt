@@ -292,13 +292,11 @@ class HotdealSearchService(
 
     private fun removeOutliers(documents: List<HotdealDocument>): List<HotdealDocument> {
         val prices = documents.mapNotNull { it.price?.toDouble() }.filter { it > 0 }.sorted()
-        if (prices.size < 4) return documents
+        if (prices.size < 3) return documents
 
-        val q1 = prices[prices.size / 4]
-        val q3 = prices[prices.size * 3 / 4]
-        val iqr = q3 - q1
-        val lower = q1 - iqr * 1.5
-        val upper = q3 + iqr * 1.5
+        val median = prices[prices.size / 2]
+        val lower = median * 0.3
+        val upper = median * 2.0
 
         return documents.filter { doc ->
             val p = doc.price?.toDouble() ?: return@filter false
