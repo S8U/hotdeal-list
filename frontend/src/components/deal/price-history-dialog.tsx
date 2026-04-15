@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { TrendingUp, Loader2, ExternalLink } from "lucide-react";
 import {
     AreaChart,
     Area,
@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import { useGetPriceHistory } from "@/api/generated/hotdeal/hotdeal";
+import type { HotdealSummary } from "@/api/generated/model";
 import { formatPrice } from "@/lib/format";
 import {
     Dialog,
@@ -49,7 +50,7 @@ export function PriceHistoryButton({ hotdealId, productName }: PriceHistoryDialo
             />
             <DialogPortal>
                 <DialogOverlay />
-                <DialogContent className="max-w-lg">
+                <DialogContent className="sm:max-w-4xl">
                     <DialogHeader className="overflow-hidden">
                         <DialogTitle className="text-base">가격 추이</DialogTitle>
                         <DialogDescription className="min-w-0 truncate text-sm">
@@ -65,8 +66,19 @@ export function PriceHistoryButton({ hotdealId, productName }: PriceHistoryDialo
     );
 }
 
+type ChartDataItem = {
+    date: string;
+    label: string;
+    min: number;
+    max: number;
+    avg: number;
+    count: number;
+    hotdeals: HotdealSummary[];
+};
+
 function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
     const { data, isLoading, isError } = useGetPriceHistory(hotdealId);
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
     if (isLoading) {
         return (
@@ -92,7 +104,7 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
         );
     }
 
-    const chartData = [...data.priceHistory]
+    const chartData: ChartDataItem[] = [...data.priceHistory]
         .reverse()
         .map((d) => ({
             date: d.date ?? "",
@@ -101,15 +113,76 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
             max: d.maxPrice ?? 0,
             avg: d.avgPrice ?? 0,
             count: d.count ?? 0,
+            hotdeals: d.hotdeals ?? [],
         }));
+
+    const selectedItem = chartData.find((d) => d.date === selectedDate) ?? null;
 
     const allPrices = chartData.flatMap((d) => [d.min, d.max]).filter((p) => p > 0);
     const globalMin = Math.min(...allPrices);
     const globalMax = Math.max(...allPrices);
     const globalAvg = chartData.reduce((sum, d) => sum + d.avg, 0) / chartData.length;
 
+    return (
+        <div className="flex flex-col gap-4 lg:flex-row">
+            <div className="min-w-0 lg:flex-1">
+                <PriceChart
+                    chartData={chartData}
+                    selectedDate={selectedDate}
+                    onSelectDate={setSelectedDate}
+                />
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
+                    <div className="rounded-md bg-muted p-2">
+                        <p className="text-xs text-muted-foreground">최저</p>
+                        <p className="font-semibold text-blue-600">{formatPrice(globalMin)}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2">
+                        <p className="text-xs text-muted-foreground">평균</p>
+                        <p className="font-semibold">{formatPrice(Math.round(globalAvg))}</p>
+                    </div>
+                    <div className="rounded-md bg-muted p-2">
+                        <p className="text-xs text-muted-foreground">최고</p>
+                        <p className="font-semibold text-red-500">{formatPrice(globalMax)}</p>
+                    </div>
+                </div>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                    총 {data.totalSimilarCount}건의 유사 상품 기준
+                </p>
+            </div>
+
+            {selectedItem ? (
+                <div className="w-full border-t pt-4 lg:w-72 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
+                    <DealListPanel selectedDate={selectedDate} selectedItem={selectedItem} />
+                </div>
+            ) : (
+                <p className="text-center text-xs text-muted-foreground lg:flex lg:w-72 lg:items-center lg:justify-center lg:border-l lg:pl-4">
+                    차트의 포인트를 클릭하면
+                    <br />
+                    해당 날짜의 핫딜을 볼 수 있습니다
+                </p>
+            )}
+        </div>
+    );
+}
+
+function PriceChart({
+    chartData,
+    selectedDate,
+    onSelectDate,
+}: {
+    chartData: ChartDataItem[];
+    selectedDate: string | null;
+    onSelectDate: (date: string) => void;
+}) {
+    const activeIndexRef = useRef<number | null>(null);
+
+    const allPrices = chartData.flatMap((d) => [d.min, d.max]).filter((p) => p > 0);
+    const globalMin = Math.min(...allPrices);
+    const globalMax = Math.max(...allPrices);
+
     const minIndex = chartData.findIndex((d) => d.avg === globalMin || d.min === globalMin);
     const maxIndex = chartData.findIndex((d) => d.avg === globalMax || d.max === globalMax);
+    const selectedIndex = chartData.findIndex((d) => d.date === selectedDate);
 
     const total = chartData.length;
 
@@ -121,6 +194,12 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
 
     const renderDot = (props: any) => {
         const { cx, cy, index } = props;
+
+        if (index === selectedIndex && index !== minIndex && index !== maxIndex) {
+            return (
+                <circle key={`dot-sel-${index}`} cx={cx} cy={cy} r={5} fill="hsl(var(--primary))" stroke="#fff" strokeWidth={2} />
+            );
+        }
         if (index === minIndex) {
             const anchor = getAnchor(index);
             return (
@@ -146,61 +225,117 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
         return <circle key={`dot-${index}`} cx={cx} cy={cy} r={3} fill="hsl(var(--primary))" />;
     };
 
+    const handleMouseMove = (state: any) => {
+        if (state?.activeTooltipIndex != null) {
+            activeIndexRef.current = state.activeTooltipIndex;
+        }
+    };
+
+    const handleMouseLeave = () => {
+        activeIndexRef.current = null;
+    };
+
+    const handleContainerClick = () => {
+        const idx = activeIndexRef.current;
+        if (idx != null && chartData[idx]) {
+            onSelectDate(chartData[idx].date);
+        }
+    };
+
     return (
-        <div className="space-y-3">
-            <div className="h-64 [&_svg]:overflow-visible">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 25, right: 15, left: 0, bottom: 20 }}>
-                        <defs>
-                            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis
-                            dataKey="label"
-                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                            tickLine={false}
-                            axisLine={false}
-                        />
-                        <YAxis
-                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(v: number) => `${Math.round(v / 10000)}만`}
-                            width={45}
-                        />
-                        <RechartsTooltip content={<CustomTooltip />} />
-                        <Area
-                            type="monotone"
-                            dataKey="avg"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth={2}
-                            fill="url(#priceGradient)"
-                            dot={renderDot}
-                            activeDot={{ r: 5 }}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+        <div className="h-64 [&_svg]:overflow-visible" onClick={handleContainerClick} style={{ cursor: "pointer" }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 25, right: 15, left: 0, bottom: 20 }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+                    <defs>
+                        <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={false}
+                    />
+                    <YAxis
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v: number) => `${Math.round(v / 10000)}만`}
+                        width={45}
+                    />
+                    <RechartsTooltip content={<CustomTooltip />} />
+                    <Area
+                        type="monotone"
+                        dataKey="avg"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="url(#priceGradient)"
+                        dot={renderDot}
+                        activeDot={{ r: 5 }}
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+function DealListPanel({
+    selectedDate,
+    selectedItem,
+}: {
+    selectedDate: string | null;
+    selectedItem: ChartDataItem;
+}) {
+    if (!selectedItem.hotdeals.length) {
+        return (
+            <div className="flex h-full min-h-32 items-center justify-center text-sm text-muted-foreground">
+                해당 날짜에 핫딜 데이터가 없습니다
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                <div className="rounded-md bg-muted p-2">
-                    <p className="text-xs text-muted-foreground">최저</p>
-                    <p className="font-semibold text-blue-600">{formatPrice(globalMin)}</p>
-                </div>
-                <div className="rounded-md bg-muted p-2">
-                    <p className="text-xs text-muted-foreground">평균</p>
-                    <p className="font-semibold">{formatPrice(Math.round(globalAvg))}</p>
-                </div>
-                <div className="rounded-md bg-muted p-2">
-                    <p className="text-xs text-muted-foreground">최고</p>
-                    <p className="font-semibold text-red-500">{formatPrice(globalMax)}</p>
-                </div>
-            </div>
-            <p className="text-center text-xs text-muted-foreground">
-                총 {data.totalSimilarCount}건의 유사 상품 기준
-            </p>
+        );
+    }
+
+    return (
+        <div>
+            <h4 className="mb-2 text-sm font-semibold">
+                {selectedItem.date}{" "}
+                <span className="font-normal text-muted-foreground">({selectedItem.hotdeals.length}건)</span>
+            </h4>
+            <ul className="space-y-2 overflow-y-auto lg:max-h-72">
+                {selectedItem.hotdeals.map((deal) => (
+                    <li key={deal.id}>
+                        <a
+                            href={deal.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group/deal flex items-start gap-2 rounded-md border p-2 transition-colors hover:bg-muted"
+                        >
+                            {deal.thumbnailUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={deal.thumbnailUrl}
+                                    alt=""
+                                    className="size-10 shrink-0 rounded object-cover"
+                                    loading="lazy"
+                                />
+                            ) : null}
+                            <div className="min-w-0 flex-1">
+                                <p className="line-clamp-2 text-xs font-medium leading-snug group-hover/deal:text-primary">
+                                    {deal.productName ?? deal.title}
+                                </p>
+                                {typeof deal.price === "number" && deal.price > 0 ? (
+                                    <p className="mt-0.5 text-xs font-bold text-foreground">
+                                        {formatPrice(deal.price)}
+                                    </p>
+                                ) : null}
+                            </div>
+                            <ExternalLink className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
+                        </a>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
