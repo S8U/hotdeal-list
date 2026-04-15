@@ -50,12 +50,18 @@ class HotdealService(
             likeCount = hotdealRaw.likeCount ?: 0,
             isEnded = hotdealRaw.isEnded ?: false,
             sourceUrl = hotdealRaw.sourceUrl,
-            thumbnailPath = hotdealRaw.thumbnailPath ?: thumbnailService.downloadAndStore(
-                platformType = hotdealRaw.platformType,
-                platformPostId = hotdealRaw.platformPostId,
-                thumbnailUrl = hotdealRaw.thumbnailImageUrl,
-                fallbackUrl = hotdealRaw.firstImageUrl
-            ),
+            thumbnailPath = hotdealRaw.thumbnailPath ?: run {
+                val path = thumbnailService.downloadAndStore(
+                    platformType = hotdealRaw.platformType,
+                    platformPostId = hotdealRaw.platformPostId,
+                    thumbnailUrl = hotdealRaw.thumbnailImageUrl,
+                    fallbackUrl = hotdealRaw.firstImageUrl
+                )
+                hotdealRaw.isThumbnailDownloaded = true
+                hotdealRaw.thumbnailPath = path
+                hotdealRawRepository.save(hotdealRaw)
+                path
+            },
             wroteAt = hotdealRaw.wroteAt
         )
 
