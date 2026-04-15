@@ -130,16 +130,16 @@ function HomeContent() {
                 }
             />
 
-            <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 pt-2 pb-6 sm:px-6 sm:pt-3">
+            <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 pb-6 sm:px-6">
                 <FilterSidebar
                     categoryTree={categoryTree}
                     communityGroups={communityGroups}
                     value={filter}
                     onChange={setFilter}
-                    className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-auto py-1 pr-2 lg:block"
+                    className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 self-start overflow-auto pt-2 pr-2 pb-6 sm:pt-3 lg:block"
                 />
 
-                <main className="min-w-0 flex-1">
+                <main className="min-w-0 flex-1 pt-2 sm:pt-3">
                     {isError ? (
                         <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
                             핫딜을 불러오지 못했습니다.
