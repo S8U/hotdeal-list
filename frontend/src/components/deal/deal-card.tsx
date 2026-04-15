@@ -53,13 +53,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
     const rootCode = path?.[0]?.code;
     const FallbackIcon = (rootCode && CATEGORY_ICON_MAP[rootCode]) || Package;
 
-    // TODO: 원래는 deal.thumbnailUrl 사용 — 임시로 플랫폼/포스트ID 기반 URL 사용
-    // const thumbnailUrl = deal.thumbnailUrl;
-    const postId = deal.url?.match(/(\d+)(?!.*\d)/)?.[1];
-    const thumbnailUrl =
-        deal.platformType && postId
-            ? `https://swas.s8u.kr/HotDeal/api/info/thumbnail/${deal.platformType}/${postId}`
-            : null;
+    const thumbnailUrl = deal.thumbnailUrl ?? null;
 
     const ended = !!deal.ended;
 
