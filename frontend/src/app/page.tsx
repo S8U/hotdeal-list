@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { useListCategories } from "@/api/generated/category/category";
 import { useListHotdealsInfinite } from "@/api/generated/hotdeal/hotdeal";
@@ -23,6 +23,7 @@ import {
 import { getCategorySubtreeCodes } from "@/lib/categories";
 import { toCommunityGroups, toPlatformCommunityMap, type PlatformType } from "@/lib/communities";
 import type { CategoryNode } from "@/lib/types";
+import { useInitialFilterFromParams, useFilterParamsSync } from "@/lib/use-filter-params";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
 
@@ -37,9 +38,12 @@ const toCategoryNodes = (raw: CategoryWithChildren[] | undefined): CategoryNode[
         }));
 };
 
-export default function Home() {
-    const [filter, setFilter] = useState<FilterState>(INITIAL_FILTER);
-    const [keyword, setKeyword] = useState("");
+function HomeContent() {
+    const { initialFilter, initialKeyword } = useInitialFilterFromParams();
+    const [filter, setFilter] = useState<FilterState>(initialFilter);
+    const [keyword, setKeyword] = useState(initialKeyword);
+
+    useFilterParamsSync(filter, keyword);
     const [sheetOpen, setSheetOpen] = useState(false);
     const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
 
@@ -210,5 +214,13 @@ export default function Home() {
                 </SheetContent>
             </Sheet>
         </div>
+    );
+}
+
+export default function Home() {
+    return (
+        <Suspense>
+            <HomeContent />
+        </Suspense>
     );
 }
