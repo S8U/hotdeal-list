@@ -256,13 +256,14 @@ class HotdealSearchService(
 
         val searchHits = elasticsearchOperations.search(nativeQuery, HotdealDocument::class.java)
         val documents = searchHits.searchHits.map { it.content }
-        
-        val priceHistory = groupByDateWithHotdeals(documents)
+
+        val filtered = removeOutliers(documents)
+        val priceHistory = groupByDateWithHotdeals(filtered)
 
         return PriceHistoryResponse(
             hotdealId = hotdealId,
             productName = baseDocument.productName,
-            totalSimilarCount = searchHits.totalHits,
+            totalSimilarCount = filtered.size.toLong(),
             priceHistory = priceHistory
         )
     }
@@ -286,6 +287,22 @@ class HotdealSearchService(
                     filter.term { t -> t.field("currencyUnit").value("KRW") }
                 }
             }
+        }
+    }
+
+    private fun removeOutliers(documents: List<HotdealDocument>): List<HotdealDocument> {
+        val prices = documents.mapNotNull { it.price?.toDouble() }.filter { it > 0 }.sorted()
+        if (prices.size < 4) return documents
+
+        val q1 = prices[prices.size / 4]
+        val q3 = prices[prices.size * 3 / 4]
+        val iqr = q3 - q1
+        val lower = q1 - iqr * 1.5
+        val upper = q3 + iqr * 1.5
+
+        return documents.filter { doc ->
+            val p = doc.price?.toDouble() ?: return@filter false
+            p in lower..upper
         }
     }
 
