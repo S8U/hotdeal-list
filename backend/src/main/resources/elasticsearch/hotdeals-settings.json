@@ -1,6 +1,11 @@
 {
   "analysis": {
     "analyzer": {
+      "nori_analyzer": {
+        "type": "custom",
+        "tokenizer": "nori_mixed_tokenizer",
+        "filter": ["lowercase", "nori_readingform", "nori_pos_filter"]
+      },
       "ngram_analyzer": {
         "type": "custom",
         "tokenizer": "ngram_tokenizer",
@@ -8,16 +13,26 @@
       },
       "suggest_analyzer": {
         "type": "custom",
-        "tokenizer": "standard",
+        "tokenizer": "nori_mixed_tokenizer",
         "filter": ["lowercase"]
       }
     },
     "tokenizer": {
+      "nori_mixed_tokenizer": {
+        "type": "nori_tokenizer",
+        "decompound_mode": "mixed"
+      },
       "ngram_tokenizer": {
         "type": "ngram",
         "min_gram": 2,
         "max_gram": 3,
-        "token_chars": ["letter", "digit"]
+        "token_chars": ["letter"]
+      }
+    },
+    "filter": {
+      "nori_pos_filter": {
+        "type": "nori_part_of_speech",
+        "stoptags": ["EC", "EF", "EP", "ETM", "ETN", "JC", "JKB", "JKC", "JKG", "JKO", "JKQ", "JKS", "JKV", "JX", "SC", "SE", "SF", "SP", "SSC", "SSO", "SY", "VCN", "VCP", "VSV", "VX", "XPN", "XSA", "XSN", "XSV"]
       }
     }
   }

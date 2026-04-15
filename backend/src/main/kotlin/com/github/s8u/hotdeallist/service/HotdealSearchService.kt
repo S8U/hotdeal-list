@@ -367,11 +367,57 @@ class HotdealSearchService(
 
         // 키워드 검색
         if (!request.keyword.isNullOrBlank()) {
-            boolQuery.must(
+            val hasDigit = request.keyword.any { it.isDigit() }
+
+            if (hasDigit) {
+                // 숫자 포함: nori only (ngram은 숫자 토큰이 없어 노이즈 유발)
+                boolQuery.must(
+                    Query.of { q ->
+                        q.multiMatch { m ->
+                            m.fields("productName^3", "title^2", "productNameEn", "titleEn")
+                                .query(request.keyword)
+                                .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BestFields)
+                                .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
+                        }
+                    }
+                )
+            } else {
+                // 한글/영문만: nori AND || ngram 75% fallback
+                boolQuery.must(
+                    Query.of { q ->
+                        q.bool { keywordBool ->
+                            keywordBool.should(
+                                Query.of { sq ->
+                                    sq.multiMatch { m ->
+                                        m.fields("productName^3", "title^2", "productNameEn", "titleEn")
+                                            .query(request.keyword)
+                                            .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BestFields)
+                                            .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
+                                    }
+                                }
+                            )
+                            keywordBool.should(
+                                Query.of { sq ->
+                                    sq.multiMatch { m ->
+                                        m.fields("productName.ngram^3", "title.ngram^2", "productNameEn.ngram", "titleEn.ngram")
+                                            .query(request.keyword)
+                                            .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BestFields)
+                                            .minimumShouldMatch("75%")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
+            }
+            // should: phrase 매칭으로 순위 보정
+            boolQuery.should(
                 Query.of { q ->
                     q.multiMatch { m ->
-                        m.fields("title^3", "productName^2", "titleEn", "productNameEn")
+                        m.fields("productName^3", "title^2", "productNameEn", "titleEn")
                             .query(request.keyword)
+                            .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.Phrase)
+                            .boost(5.0f)
                     }
                 }
             )

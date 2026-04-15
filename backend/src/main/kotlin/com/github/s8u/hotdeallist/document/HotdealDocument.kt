@@ -2,7 +2,14 @@ package com.github.s8u.hotdeallist.document
 
 import com.github.s8u.hotdeallist.enums.PlatformType
 import org.springframework.data.annotation.Id
-import org.springframework.data.elasticsearch.annotations.*
+import org.springframework.data.elasticsearch.annotations.DateFormat
+import org.springframework.data.elasticsearch.annotations.Document
+import org.springframework.data.elasticsearch.annotations.Field
+import org.springframework.data.elasticsearch.annotations.FieldType
+import org.springframework.data.elasticsearch.annotations.InnerField
+import org.springframework.data.elasticsearch.annotations.MultiField
+import org.springframework.data.elasticsearch.annotations.Setting
+import org.springframework.data.elasticsearch.annotations.CompletionField
 import org.springframework.data.elasticsearch.core.suggest.Completion
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -25,16 +32,28 @@ class HotdealDocument(
     @Field(type = FieldType.Keyword, index = false)
     val url: String,
 
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "standard")
+    @MultiField(
+        mainField = Field(type = FieldType.Text, analyzer = "nori_analyzer", searchAnalyzer = "nori_analyzer"),
+        otherFields = [InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "ngram_analyzer")]
+    )
     val title: String,
 
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "standard")
+    @MultiField(
+        mainField = Field(type = FieldType.Text, analyzer = "standard", searchAnalyzer = "standard"),
+        otherFields = [InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "ngram_analyzer")]
+    )
     val titleEn: String? = null,
 
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "standard")
+    @MultiField(
+        mainField = Field(type = FieldType.Text, analyzer = "nori_analyzer", searchAnalyzer = "nori_analyzer"),
+        otherFields = [InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "ngram_analyzer")]
+    )
     val productName: String? = null,
 
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "standard")
+    @MultiField(
+        mainField = Field(type = FieldType.Text, analyzer = "standard", searchAnalyzer = "standard"),
+        otherFields = [InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer", searchAnalyzer = "ngram_analyzer")]
+    )
     val productNameEn: String? = null,
 
     @Field(type = FieldType.Double)

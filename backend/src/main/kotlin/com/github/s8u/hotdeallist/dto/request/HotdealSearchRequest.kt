@@ -33,6 +33,6 @@ data class HotdealSearchRequest(
     @field:Schema(description = "최대 가격")
     val maxPrice: BigDecimal? = null,
 
-    @field:Schema(description = "종료된 핫딜 포함 여부", defaultValue = "false")
-    val includeEnded: Boolean = false
+    @field:Schema(description = "종료된 핫딜 포함 여부", defaultValue = "true")
+    val includeEnded: Boolean = true
 )
