@@ -2,7 +2,6 @@ package com.github.s8u.hotdeallist.service
 
 import co.elastic.clients.elasticsearch._types.FieldValue
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery
-import co.elastic.clients.elasticsearch._types.query_dsl.Like
 import co.elastic.clients.elasticsearch._types.query_dsl.Query
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.ObjectMapper
@@ -247,7 +246,7 @@ class HotdealSearchService(
 
         val productName = baseDocument.productName ?: baseDocument.title
         
-        val moreLikeThisQuery = buildMoreLikeThisQuery(productName)
+        val moreLikeThisQuery = buildPriceHistoryQuery(productName)
         
         val nativeQuery = NativeQuery.builder()
             .withQuery(moreLikeThisQuery)
@@ -268,19 +267,14 @@ class HotdealSearchService(
         )
     }
 
-    private fun buildMoreLikeThisQuery(productName: String): Query {
+    private fun buildPriceHistoryQuery(productName: String): Query {
         return Query.of { q ->
             q.bool { bool ->
                 bool.must { must ->
-                    must.moreLikeThis { mlt ->
-                        mlt.fields("productName")
-                            .like(
-                                Like.of { l -> l.text(productName) }
-                            )
-                            .minTermFreq(1)
-                            .maxQueryTerms(10)
-                            .minDocFreq(1)
-                            .minimumShouldMatch("85%")
+                    must.matchPhrase { mp ->
+                        mp.field("productName")
+                            .query(productName)
+                            .slop(1)
                     }
                 }
                 bool.filter { filter ->

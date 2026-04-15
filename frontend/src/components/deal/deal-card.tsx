@@ -24,6 +24,7 @@ import type { CategoryNode } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { CommunityTag } from "./community-tag";
+import { PriceHistoryButton } from "./price-history-dialog";
 
 const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
     electronics: Cpu,
@@ -63,10 +64,10 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
     const ended = !!deal.ended;
 
     return (
-        <div className={`group flex gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3${ended ? " opacity-60" : ""}`}>
+        <div className={`group relative flex cursor-pointer gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3${ended ? " opacity-60" : ""}`}>
             <a
                 href={deal.url}
-                className="relative block size-24 shrink-0 overflow-hidden rounded-md bg-black/3 sm:size-28"
+                className="relative z-10 block size-24 shrink-0 overflow-hidden rounded-md bg-black/3 sm:size-28"
                 aria-label={deal.title}
                 target="_blank"
                 rel="noreferrer"
@@ -102,7 +103,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
             </a>
 
             <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex flex-wrap items-center gap-1">
+                <div className="relative z-10 flex flex-wrap items-center gap-1">
                     {leafCode && onCategoryClick ? (
                         <button
                             type="button"
@@ -127,7 +128,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
 
                 <a
                     href={deal.url}
-                    className="mt-1.5 focus:outline-none"
+                    className="mt-1.5 after:absolute after:inset-0 focus:outline-none"
                     aria-label={deal.title}
                     target="_blank"
                     rel="noreferrer"
@@ -147,9 +148,14 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                 <div className="mt-auto flex items-center justify-between gap-2 pt-2">
                     <div className="flex min-w-0 items-center gap-2">
                         {typeof deal.price === "number" && deal.price > 0 ? (
-                            <p className="truncate text-base font-bold text-foreground sm:text-lg">
-                                {formatPrice(deal.price)}
-                            </p>
+                            <>
+                                <p className="truncate text-base font-bold text-foreground sm:text-lg">
+                                    {formatPrice(deal.price)}
+                                </p>
+                                {deal.id ? (
+                                    <PriceHistoryButton hotdealId={deal.id} productName={deal.productName} />
+                                ) : null}
+                            </>
                         ) : null}
                         <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
                             {typeof deal.likeCount === "number" && deal.likeCount > 0 ? (
@@ -192,7 +198,7 @@ function TimeLabel({ iso }: { iso: string }) {
             {/* 모바일: 클릭 토글 */}
             <time
                 dateTime={iso}
-                className="shrink-0 cursor-pointer text-xs text-muted-foreground lg:hidden"
+                className="relative z-10 shrink-0 text-xs text-muted-foreground lg:hidden"
                 onClick={() => setShowAbsolute((v) => !v)}
             >
                 {showAbsolute ? formatAbsolute(iso) : formatRelativeTime(iso)}
@@ -204,7 +210,7 @@ function TimeLabel({ iso }: { iso: string }) {
                         render={
                             <time
                                 dateTime={iso}
-                                className="hidden shrink-0 cursor-default text-xs text-muted-foreground lg:inline"
+                                className="relative z-10 hidden shrink-0 text-xs text-muted-foreground lg:inline"
                             >
                                 {formatRelativeTime(iso)}
                             </time>
