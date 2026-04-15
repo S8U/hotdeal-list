@@ -75,7 +75,7 @@ class EsIndexManagementService(
                     "nori_analyzer" to mapOf(
                         "type" to "custom",
                         "tokenizer" to "nori_mixed_tokenizer",
-                        "filter" to listOf("lowercase", "nori_readingform", "nori_pos_filter")
+                        "filter" to listOf("lowercase", "nori_readingform", "nori_pos_filter", "unit_synonym_filter")
                     ),
                     "ngram_analyzer" to mapOf(
                         "type" to "custom",
@@ -106,6 +106,15 @@ class EsIndexManagementService(
                             "SC", "SE", "SF", "SP", "SSC", "SSO", "SY",
                             "VCN", "VCP", "VSV", "VX",
                             "XPN", "XSA", "XSN", "XSV"
+                        )
+                    ),
+                    "unit_synonym_filter" to mapOf(
+                        "type" to "synonym",
+                        "synonyms" to listOf(
+                            "테라,tb",
+                            "기가,gb",
+                            "메가,mb",
+                            "인치,inch"
                         )
                     )
                 )

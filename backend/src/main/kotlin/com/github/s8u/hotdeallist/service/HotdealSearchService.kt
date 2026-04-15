@@ -511,7 +511,7 @@ class HotdealSearchService(
     private fun buildSuggestInput(productName: String?, title: String, viewCount: Int, likeCount: Int, commentCount: Int): Completion {
         val inputs = mutableListOf<String>()
         if (!productName.isNullOrBlank()) inputs.add(productName)
-        inputs.add(title)
+        else inputs.add(title)
         val score = viewCount + likeCount * 5 + commentCount * 2
         val completion = Completion(inputs)
         completion.setWeight(score.coerceAtLeast(1))

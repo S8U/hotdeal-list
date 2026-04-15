@@ -35,14 +35,15 @@ class EsDictionaryService(
         val candidateWords = extractFrequentKoreanWords()
         logger.info("빈출 한글 단어 후보: {}개", candidateWords.size)
 
-        val problematicWords = candidateWords.filter { isNoriMisTokenized(it) }
+        val problematicWords = candidateWords.distinct().filter { isNoriMisTokenized(it) }
         logger.info("nori 오분석 단어: {}개 — {}", problematicWords.size, problematicWords.take(20))
 
         // AUTO 사전 갱신: 기존 AUTO 삭제 후 새로 삽입
         esDictionaryRepository.deleteAllBySource(DictionarySource.AUTO)
-        val newEntries = problematicWords.map { word ->
-            EsDictionary(word = word, source = DictionarySource.AUTO)
-        }
+        entityManager.flush()
+        val newEntries = problematicWords
+            .filter { !esDictionaryRepository.existsByWord(it) }
+            .map { word -> EsDictionary(word = word, source = DictionarySource.AUTO) }
         esDictionaryRepository.saveAll(newEntries)
 
         val manualCount = esDictionaryRepository.findAllBySource(DictionarySource.MANUAL).size
