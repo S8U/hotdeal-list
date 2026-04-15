@@ -125,10 +125,28 @@ class HotdealSearchService(
     }
 
     fun indexAll(hotdeals: List<Hotdeal>) {
+        val documents = buildDocuments(hotdeals)
+        hotdealElasticsearchRepository.saveAll(documents)
+        logger.info("Bulk indexed {} hotdeals to ES", documents.size)
+    }
+
+    fun indexAllToIndex(hotdeals: List<Hotdeal>, indexName: String) {
+        val documents = buildDocuments(hotdeals)
+        val indexCoordinates = org.springframework.data.elasticsearch.core.mapping.IndexCoordinates.of(indexName)
+        val queries = documents.map { doc ->
+            org.springframework.data.elasticsearch.core.query.IndexQueryBuilder()
+                .withId(doc.id.toString())
+                .withObject(doc)
+                .build()
+        }
+        elasticsearchOperations.bulkIndex(queries, indexCoordinates)
+        logger.info("Bulk indexed {} hotdeals to index '{}'", documents.size, indexName)
+    }
+
+    private fun buildDocuments(hotdeals: List<Hotdeal>): List<HotdealDocument> {
         val hotdealIds = hotdeals.mapNotNull { it.id }
         val rawIds = hotdeals.map { it.hotdealRawId }
 
-        // 배치 조회: N+1 방지
         val categoryMap = hotdealCategoryRepository.findByHotdealIdIn(hotdealIds)
             .groupBy { it.hotdealId }
         val allCategoryIds = categoryMap.values.flatten().map { it.categoryId }.distinct()
@@ -141,7 +159,7 @@ class HotdealSearchService(
         val processMap = hotdealProcessRepository.findByHotdealRawIdIn(rawIds)
             .groupBy { it.hotdealRawId }
 
-        val documents = hotdeals.map { hotdeal ->
+        return hotdeals.map { hotdeal ->
             val categoryCodes = categoryMap[hotdeal.id]
                 ?.mapNotNull { categoryCodeMap[it.categoryId] }
                 ?: emptyList()
@@ -176,9 +194,6 @@ class HotdealSearchService(
                 suggest = buildSuggestInput(hotdeal.productName, hotdeal.title, hotdeal.viewCount, hotdeal.likeCount, hotdeal.commentCount)
             )
         }
-
-        hotdealElasticsearchRepository.saveAll(documents)
-        logger.info("Bulk indexed {} hotdeals to ES", documents.size)
     }
 
     private fun getCategoryCodes(hotdealId: Long): List<String> {

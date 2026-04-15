@@ -8,14 +8,12 @@ import org.springframework.data.elasticsearch.annotations.Field
 import org.springframework.data.elasticsearch.annotations.FieldType
 import org.springframework.data.elasticsearch.annotations.InnerField
 import org.springframework.data.elasticsearch.annotations.MultiField
-import org.springframework.data.elasticsearch.annotations.Setting
 import org.springframework.data.elasticsearch.annotations.CompletionField
 import org.springframework.data.elasticsearch.core.suggest.Completion
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@Document(indexName = "hotdeals")
-@Setting(settingPath = "elasticsearch/hotdeals-settings.json")
+@Document(indexName = "hotdeals", createIndex = false)
 class HotdealDocument(
     @Id
     val id: Long,

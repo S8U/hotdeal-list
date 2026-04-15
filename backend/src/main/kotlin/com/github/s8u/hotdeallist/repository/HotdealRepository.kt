@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface HotdealRepository : JpaRepository<Hotdeal, Long> {
     fun findByHotdealRawId(hotdealRawId: Long): Hotdeal?
+    fun findByUpdatedAtGreaterThanEqual(updatedAt: java.time.LocalDateTime): List<Hotdeal>
 }
