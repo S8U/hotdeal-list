@@ -79,8 +79,10 @@ class HotdealThumbnailService(
         return try {
             val image = ImmutableImage.loader().fromBytes(imageBytes)
 
-            val resized = if (image.width > MAX_WIDTH || image.height > MAX_HEIGHT) {
-                image.bound(MAX_WIDTH, MAX_HEIGHT)
+            val minSide = minOf(image.width, image.height)
+            val resized = if (minSide > MIN_SIDE) {
+                val scale = MIN_SIDE.toDouble() / minSide
+                image.scale(scale)
             } else {
                 image
             }
@@ -93,8 +95,7 @@ class HotdealThumbnailService(
     }
 
     companion object {
-        private const val MAX_WIDTH = 300
-        private const val MAX_HEIGHT = 300
+        private const val MIN_SIDE = 300
         private const val WEBP_QUALITY = 80
     }
 }

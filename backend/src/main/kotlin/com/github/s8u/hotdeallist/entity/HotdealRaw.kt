@@ -67,6 +67,12 @@ class HotdealRaw(
     @Column(length = 2048, comment = "첫 번째 이미지 URL")
     val firstImageUrl: String? = null,
 
+    @Column(nullable = false, comment = "썸네일 다운로드 여부")
+    var isThumbnailDownloaded: Boolean = false,
+
+    @Column(length = 512, comment = "썸네일 경로")
+    var thumbnailPath: String? = null,
+
     @Column(nullable = false, comment = "게시글 작성 시간")
     val wroteAt: LocalDateTime
 ) : BaseEntity()

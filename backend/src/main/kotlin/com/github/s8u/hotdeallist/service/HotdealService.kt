@@ -50,7 +50,7 @@ class HotdealService(
             likeCount = hotdealRaw.likeCount ?: 0,
             isEnded = hotdealRaw.isEnded ?: false,
             sourceUrl = hotdealRaw.sourceUrl,
-            thumbnailPath = thumbnailService.downloadAndStore(
+            thumbnailPath = hotdealRaw.thumbnailPath ?: thumbnailService.downloadAndStore(
                 platformType = hotdealRaw.platformType,
                 platformPostId = hotdealRaw.platformPostId,
                 thumbnailUrl = hotdealRaw.thumbnailImageUrl,
