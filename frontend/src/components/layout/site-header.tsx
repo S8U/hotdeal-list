@@ -325,7 +325,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                 setSearchOpen(open);
                 if (open) setMobileDraft(keyword);
             }}>
-                <SheetContent side="top" className="h-full p-0">
+                <SheetContent side="top" className="h-full p-0" showCloseButton={false}>
                     <SheetTitle className="sr-only">검색</SheetTitle>
                     <div className="flex h-16 items-center gap-2 px-3">
                         <Button
