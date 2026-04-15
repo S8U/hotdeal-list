@@ -21,6 +21,6 @@ export function formatRelativeTime(iso: string): string {
     if (day < 30) return `${day}일 전`;
     const month = Math.floor(day / 30);
     if (month < 12) return `${month}개월 전`;
-    const year = Math.floor(day / 365);
+    const year = Math.max(1, Math.floor(day / 365));
     return `${year}년 전`;
 }
