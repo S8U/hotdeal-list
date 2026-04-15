@@ -117,7 +117,7 @@ function Chip({
                 "inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
                 active
                     ? "bg-foreground text-background"
-                    : "bg-muted text-zinc-700 hover:bg-muted/70",
+                    : "bg-muted text-foreground hover:bg-muted/70",
             )}
         >
             <span className="truncate">{children}</span>

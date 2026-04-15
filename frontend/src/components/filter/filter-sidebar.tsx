@@ -184,7 +184,7 @@ export function FilterSidebar({
                     {only ? (
                         <Button
                             variant="outline"
-                            className="h-12 shrink-0 rounded-lg border-zinc-200 px-7 text-base font-medium text-zinc-700"
+                            className="h-12 shrink-0 rounded-lg border-border px-7 text-base font-medium text-foreground"
                             onClick={() => {
                                 if (only === "category")
                                     onChange({ ...value, categoryCode: null });

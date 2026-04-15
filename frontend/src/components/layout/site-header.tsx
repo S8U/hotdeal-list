@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/sheet";
 
 const ICON_WEIGHT = "bold";
-const ICON_CLASS = "size-6 text-zinc-700";
+const ICON_CLASS = "size-6 text-foreground";
 
 type SiteHeaderProps = {
     mobileSlot?: React.ReactNode;
@@ -180,7 +180,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         <>
             <header className="sticky top-0 z-40 w-full bg-background">
                 <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
-                    <a href="/" className="flex shrink-0 items-center gap-2 text-xl font-bold text-zinc-700 sm:text-2xl">
+                    <a href="/" className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
                         <FireIcon className="size-7 text-orange-500 sm:size-8" weight="fill" />
                         <span>핫딜리스트</span>
                     </a>
@@ -288,7 +288,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                         </Button>
                         <Button
                             variant="outline"
-                            className="hidden h-10 rounded-full border-zinc-200 px-4 text-sm font-medium text-zinc-700 sm:inline-flex"
+                            className="hidden h-10 rounded-full border-border px-4 text-sm font-medium text-foreground sm:inline-flex"
                             onClick={() => alert("준비 중인 기능입니다.")}
                         >
                             로그인

@@ -83,7 +83,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                 ) : null}
                 <div
                     data-fallback
-                    className="absolute inset-0 items-center justify-center text-zinc-300"
+                    className="absolute inset-0 items-center justify-center text-muted-foreground/60"
                     style={{ display: thumbnailUrl ? "none" : "flex" }}
                     aria-hidden
                 >
@@ -102,7 +102,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         <button
                             type="button"
                             onClick={() => onCategoryClick(leafCode)}
-                            className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 hover:text-primary"
+                            className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-primary"
                         >
                             <span className="truncate">{categoryLabelShort}</span>
                         </button>
@@ -129,11 +129,11 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                 >
                     {deal.highlightedTitle ? (
                         <h3
-                            className="line-clamp-2 text-sm font-medium leading-snug text-zinc-700 group-hover:text-primary [&_em]:not-italic [&_em]:font-bold [&_em]:text-primary"
+                            className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary [&_em]:not-italic [&_em]:font-bold [&_em]:text-primary"
                             dangerouslySetInnerHTML={{ __html: deal.highlightedTitle }}
                         />
                     ) : (
-                        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-zinc-700 group-hover:text-primary">
+                        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary">
                             {deal.title}
                         </h3>
                     )}
