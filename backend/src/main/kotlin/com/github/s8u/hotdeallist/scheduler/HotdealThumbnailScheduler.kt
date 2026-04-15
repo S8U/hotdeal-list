@@ -22,15 +22,24 @@ class HotdealThumbnailScheduler(
 
     @Scheduled(cron = "0 * * * * *")
     fun downloadMissingThumbnails() {
-        val raws = hotdealRawRepository.findTop100ByIsThumbnailDownloadedFalseAndThumbnailImageUrlIsNotNull()
+        val raws = hotdealRawRepository.findTop100ByIsThumbnailDownloadedFalse()
         if (raws.isEmpty()) return
 
         logger.info("썸네일 미다운로드 건 처리 시작: {}건", raws.size)
 
         var success = 0
         var failed = 0
+        var skipped = 0
 
         for (raw in raws) {
+            // URL 없으면 다운로드 시도 없이 바로 마킹
+            if (raw.thumbnailImageUrl == null && raw.firstImageUrl == null) {
+                raw.isThumbnailDownloaded = true
+                hotdealRawRepository.save(raw)
+                skipped++
+                continue
+            }
+
             val path = try {
                 thumbnailService.downloadAndStore(
                     platformType = raw.platformType,
@@ -63,6 +72,6 @@ class HotdealThumbnailScheduler(
             Thread.sleep(1000)
         }
 
-        logger.info("썸네일 다운로드 완료: 성공={}, 실패={}", success, failed)
+        logger.info("썸네일 다운로드 완료: 성공={}, 실패={}, 스킵(URL없음)={}", success, failed, skipped)
     }
 }

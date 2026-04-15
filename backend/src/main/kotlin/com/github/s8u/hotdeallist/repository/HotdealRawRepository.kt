@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface HotdealRawRepository : JpaRepository<HotdealRaw, Long> {
     fun findByPlatformTypeAndPlatformPostId(platformType: PlatformType, postId: String): HotdealRaw?
-    fun findTop100ByIsThumbnailDownloadedFalseAndThumbnailImageUrlIsNotNull(): List<HotdealRaw>
+    fun findTop100ByIsThumbnailDownloadedFalse(): List<HotdealRaw>
 
     @Query("""
         SELECT r FROM HotdealRaw r
