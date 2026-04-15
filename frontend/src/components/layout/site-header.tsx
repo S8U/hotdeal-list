@@ -174,6 +174,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                         />
                         <Input
                             type="search"
+                            autoComplete="off"
                             placeholder="상품/키워드 검색"
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
@@ -325,6 +326,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             <Input
                                 autoFocus
                                 type="search"
+                                autoComplete="off"
                                 placeholder="상품/키워드 검색"
                                 value={mobileDraft}
                                 onChange={(e) => setMobileDraft(e.target.value)}
