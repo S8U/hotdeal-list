@@ -273,21 +273,23 @@ class HotdealSearchService(
             q.bool { bool ->
                 bool.must { must ->
                     must.moreLikeThis { mlt ->
-                        mlt.fields("productName", "title")
+                        mlt.fields("productName")
                             .like(
                                 Like.of { l -> l.text(productName) }
                             )
                             .minTermFreq(1)
-                            .maxQueryTerms(15)
+                            .maxQueryTerms(10)
                             .minDocFreq(1)
-                            .minimumShouldMatch("30%")
+                            .minimumShouldMatch("85%")
                     }
                 }
                 bool.filter { filter ->
-                    filter.exists { e -> e.field("price") }
+                    filter.range { r ->
+                        r.number { n -> n.field("price").gt(0.0) }
+                    }
                 }
                 bool.filter { filter ->
-                    filter.term { t -> t.field("isEnded").value(false) }
+                    filter.term { t -> t.field("currencyUnit").value("KRW") }
                 }
             }
         }
