@@ -283,12 +283,13 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                         >
                             <MagnifyingGlassIcon className={ICON_CLASS} weight={ICON_WEIGHT} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="size-10" aria-label="알림">
+                        <Button variant="ghost" size="icon" className="size-10" aria-label="알림" onClick={() => alert("준비 중인 기능입니다.")}>
                             <BellIcon className={ICON_CLASS} weight={ICON_WEIGHT} />
                         </Button>
                         <Button
                             variant="outline"
                             className="hidden h-10 rounded-full border-zinc-200 px-4 text-sm font-medium text-zinc-700 sm:inline-flex"
+                            onClick={() => alert("준비 중인 기능입니다.")}
                         >
                             로그인
                         </Button>
@@ -297,6 +298,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             size="icon"
                             className="size-10 sm:hidden"
                             aria-label="내 계정"
+                            onClick={() => alert("준비 중인 기능입니다.")}
                         >
                             <UserIcon className={ICON_CLASS} weight={ICON_WEIGHT} />
                         </Button>
