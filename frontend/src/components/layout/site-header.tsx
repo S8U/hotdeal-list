@@ -65,7 +65,11 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
             setRecentSearches(addRecentSearch(trimmed));
         }
         onSearch?.(trimmed);
+        setDesktopFocused(false);
         setSearchOpen(false);
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
     }, [onSearch]);
 
     const handleRecentClick = useCallback((value: string) => {
@@ -180,6 +184,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                             onChange={(e) => setDraft(e.target.value)}
                             onFocus={() => setDesktopFocused(true)}
                             onKeyDown={(e) => {
+                                if (e.nativeEvent.isComposing) return;
                                 if (e.key === "Escape") {
                                     setDesktopFocused(false);
                                 } else if (desktopFocused && desktopItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
@@ -331,6 +336,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                 value={mobileDraft}
                                 onChange={(e) => setMobileDraft(e.target.value)}
                                 onKeyDown={(e) => {
+                                    if (e.nativeEvent.isComposing) return;
                                     if (mobileItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
                                         handleKeyNav(e, mobileItems, (value) => {
                                             setMobileDraft(value);
