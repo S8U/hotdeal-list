@@ -85,16 +85,23 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         setRecentSearches(clearRecentSearches());
     }, []);
 
-    // 자동완성: debounce된 검색어
+    // 자동완성: throttle + debounce 검색어
     const [debouncedDraft, setDebouncedDraft] = useState("");
     const activeDraft = searchOpen ? mobileDraft : draft;
+    const lastFiredRef = useRef(0);
     useEffect(() => {
         const trimmed = activeDraft.trim();
         if (!trimmed) {
             setDebouncedDraft("");
             return;
         }
-        const timer = setTimeout(() => setDebouncedDraft(trimmed), 200);
+        const now = Date.now();
+        const elapsed = now - lastFiredRef.current;
+        const delay = elapsed >= 200 ? 0 : 200 - elapsed;
+        const timer = setTimeout(() => {
+            lastFiredRef.current = Date.now();
+            setDebouncedDraft(trimmed);
+        }, delay);
         return () => clearTimeout(timer);
     }, [activeDraft]);
 
@@ -102,7 +109,14 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         { q: debouncedDraft },
         { query: { enabled: debouncedDraft.length >= 1, placeholderData: (prev) => prev } },
     );
-    const suggestions = debouncedDraft ? (suggestData?.suggestions ?? []) : [];
+    const prevSuggestionsRef = useRef<string[]>([]);
+    const rawSuggestions = debouncedDraft ? (suggestData?.suggestions ?? []) : [];
+    if (rawSuggestions.length > 0) {
+        prevSuggestionsRef.current = rawSuggestions;
+    }
+    const suggestions = debouncedDraft
+        ? (rawSuggestions.length > 0 ? rawSuggestions : prevSuggestionsRef.current)
+        : [];
 
     const handleSuggestionClick = useCallback((value: string) => {
         setDraft(value);
