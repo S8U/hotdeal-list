@@ -20,8 +20,8 @@ class HotdealProcessService(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun processHotdealFromRaw(rawId: Long) {
-        logger.info("Processing hotdeal from rawId={}", rawId)
+    fun processHotdealFromRaw(rawId: Long, useFreeOnly: Boolean = false) {
+        logger.info("Processing hotdeal from rawId={}, useFreeOnly={}", rawId, useFreeOnly)
 
         val hotdealRaw = hotdealRawRepository.findById(rawId)
             .orElseThrow { BusinessException("핫딜 원본 데이터를 찾을 수 없습니다.") }
@@ -43,8 +43,11 @@ class HotdealProcessService(
                 .build()
             chatModel.call(Prompt(prompt, options))
         }
-        // 실패 시 유료 모델로 요청
+        // 실패 시 유료 모델로 요청 (useFreeOnly=true면 예외 전파)
         catch (e: Exception) {
+            if (useFreeOnly) {
+                throw e
+            }
             logger.warn("Free model failed, falling back to paid: rawId={}, error={}", rawId, e.message)
 
             model = "openai/gpt-oss-120b"
