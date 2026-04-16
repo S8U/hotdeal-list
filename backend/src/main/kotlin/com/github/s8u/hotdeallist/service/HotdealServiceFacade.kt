@@ -1,5 +1,6 @@
 package com.github.s8u.hotdeallist.service
 
+import com.github.s8u.hotdeallist.crawler.HotdealCrawlerResolver
 import com.github.s8u.hotdeallist.enums.PlatformType
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
 import com.github.s8u.hotdeallist.repository.HotdealRepository
@@ -12,7 +13,8 @@ class HotdealServiceFacade(
     private val hotdealProcessRepository: HotdealProcessRepository,
     private val hotdealRawService: HotdealRawService,
     private val hotdealService: HotdealService,
-    private val hotdealProcessService: HotdealProcessService
+    private val hotdealProcessService: HotdealProcessService,
+    private val hotdealCrawlerResolver: HotdealCrawlerResolver
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -20,10 +22,16 @@ class HotdealServiceFacade(
     fun createHotdealAllPlatforms(page: Int, delay: Long = 1000L) {
         logger.info("Creating hotdeal all platforms page={}", page)
 
-        PlatformType.values().forEach { platformType ->
-            createHotdeal(platformType, page, delay)
-        }
-        
+        PlatformType.values()
+            .filter { hotdealCrawlerResolver.isSupportedPlatformType(it) }
+            .forEach { platformType ->
+                try {
+                    createHotdeal(platformType, page, delay)
+                } catch (e: Exception) {
+                    logger.error("Failed to create hotdeal platformType={}, page={}", platformType, page, e)
+                }
+            }
+
         logger.info("Created hotdeal all platforms page={}", page)
     }
 
@@ -35,21 +43,25 @@ class HotdealServiceFacade(
 
         // 핫딜 저장
         rawIds.forEach { rawId, _ ->
-            val hotdealProcess = hotdealProcessRepository.findFirstByHotdealRawIdOrderByIdDesc(rawId)
-            val hotdeal = hotdealRepository.findByHotdealRawId(rawId)
+            try {
+                val hotdealProcess = hotdealProcessRepository.findFirstByHotdealRawIdOrderByIdDesc(rawId)
+                val hotdeal = hotdealRepository.findByHotdealRawId(rawId)
 
-            // 핫딜 데이터 가공
-            if (hotdealProcess == null) {
-                hotdealProcessService.processHotdealFromRaw(rawId)
-            }
+                // 핫딜 데이터 가공
+                if (hotdealProcess == null) {
+                    hotdealProcessService.processHotdealFromRaw(rawId)
+                }
 
-            // 핫딜 생성
-            if (hotdeal == null) {
-                hotdealService.createHotdealFromRawAndProcess(rawId)
-            }
-            // 핫딜 업데이트
-            else {
-                hotdealService.updateHotdealFromRaw(rawId)
+                // 핫딜 생성
+                if (hotdeal == null) {
+                    hotdealService.createHotdealFromRawAndProcess(rawId)
+                }
+                // 핫딜 업데이트
+                else {
+                    hotdealService.updateHotdealFromRaw(rawId)
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to process hotdeal rawId={}, platformType={}", rawId, platformType, e)
             }
         }
 

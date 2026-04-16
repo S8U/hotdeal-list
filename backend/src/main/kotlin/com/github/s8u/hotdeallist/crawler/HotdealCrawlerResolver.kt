@@ -12,4 +12,8 @@ class HotdealCrawlerResolver(
         return crawlers.find { it.getPlatformType() == platformType }
     }
 
+    fun isSupportedPlatformType(platformType: PlatformType): Boolean {
+        return crawlers.any { it.getPlatformType() == platformType }
+    }
+
 }
