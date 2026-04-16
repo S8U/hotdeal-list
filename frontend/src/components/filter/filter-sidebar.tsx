@@ -64,120 +64,165 @@ export function FilterSidebar({
         onChange({ ...value, platforms: next as PlatformType[] });
     };
 
+    const showSectionTitles = !only && !hideTitle;
+
+    const settingsSection = show("community") ? (
+        <section
+            className={
+                only
+                    ? "space-y-1"
+                    : showSectionTitles
+                      ? "space-y-2 pl-2"
+                      : "space-y-2"
+            }
+        >
+            {showSectionTitles ? (
+                <h3 className="text-sm font-medium text-foreground/70">커뮤니티</h3>
+            ) : null}
+            <ul
+                className={
+                    only
+                        ? "space-y-1"
+                        : showSectionTitles
+                          ? "space-y-1 pl-2"
+                          : "space-y-1"
+                }
+            >
+                {communityGroups.map((g) => {
+                    const checked = g.platforms.every((p) => value.platforms.includes(p));
+                    return (
+                        <li key={g.communityName}>
+                            <label
+                                className={
+                                    only
+                                        ? "flex cursor-pointer items-center gap-3 py-1 text-base"
+                                        : "flex cursor-pointer items-center gap-2.5 py-1 text-sm"
+                                }
+                            >
+                                <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={() => toggleCommunity(g)}
+                                    className={only ? "size-5" : ""}
+                                />
+                                <span>{g.communityName}</span>
+                            </label>
+                        </li>
+                    );
+                })}
+            </ul>
+        </section>
+    ) : null;
+
+    const categorySection = show("category") ? (
+        <section
+            className={
+                only === "category"
+                    ? "flex min-h-0 flex-1 flex-col"
+                    : only
+                      ? "space-y-1"
+                      : showSectionTitles
+                        ? "space-y-2 pl-2"
+                        : "space-y-2"
+            }
+        >
+            {(!only || value.categoryCode) ? (
+                <header className="mb-2 flex items-center justify-between">
+                    {only ? null : (
+                        <h3 className="text-sm font-medium text-foreground/70">카테고리</h3>
+                    )}
+                    {value.categoryCode ? (
+                        <button
+                            type="button"
+                            onClick={() => onChange({ ...value, categoryCode: null })}
+                            className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            전체
+                        </button>
+                    ) : null}
+                </header>
+            ) : null}
+
+            <div
+                className={
+                    only === "category"
+                        ? "scrollbar-subtle min-h-0 flex-1 overflow-auto"
+                        : "scrollbar-subtle max-h-[320px] overflow-auto"
+                }
+            >
+                <CategoryTree
+                    nodes={categoryTree}
+                    value={value.categoryCode}
+                    onChange={(code) => onChange({ ...value, categoryCode: code })}
+                    forceExpandedCodes={forceExpandedCodes}
+                    size={only ? "lg" : "sm"}
+                />
+            </div>
+        </section>
+    ) : null;
+
+    const priceSection = show("price") ? (
+        <section
+            className={
+                only
+                    ? "space-y-1"
+                    : showSectionTitles
+                      ? "space-y-2 pl-2"
+                      : "space-y-2"
+            }
+        >
+            {only ? null : (
+                <h3 className="text-sm font-medium text-foreground/70">가격 범위</h3>
+            )}
+            <div className="flex items-center gap-2">
+                <Input
+                    aria-label="최소 가격"
+                    inputMode="numeric"
+                    placeholder="최소"
+                    value={value.priceMin}
+                    onChange={(e) =>
+                        onChange({
+                            ...value,
+                            priceMin: e.target.value.replace(/[^\d]/g, ""),
+                        })
+                    }
+                    className={only ? "h-12 text-base" : ""}
+                />
+                <span className="text-muted-foreground">~</span>
+                <Input
+                    aria-label="최대 가격"
+                    inputMode="numeric"
+                    placeholder="최대"
+                    value={value.priceMax}
+                    onChange={(e) =>
+                        onChange({
+                            ...value,
+                            priceMax: e.target.value.replace(/[^\d]/g, ""),
+                        })
+                    }
+                    className={only ? "h-12 text-base" : ""}
+                />
+            </div>
+        </section>
+    ) : null;
+
     return (
         <aside className={className}>
-            {hideTitle ? null : <h2 className="mb-6 text-base font-semibold">필터</h2>}
-
-            {show("category") ? (
-                <section
-                    className={
-                        only === "category"
-                            ? "flex min-h-0 flex-1 flex-col"
-                            : only ? "space-y-1" : "mb-8 space-y-2"
-                    }
-                >
-                    {(!only || value.categoryCode) ? (
-                        <header className="mb-2 flex items-center justify-between">
-                            {only ? null : (
-                                <h3 className="text-sm font-medium text-muted-foreground">카테고리</h3>
-                            )}
-                            {value.categoryCode ? (
-                                <button
-                                    type="button"
-                                    onClick={() => onChange({ ...value, categoryCode: null })}
-                                    className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    전체
-                                </button>
-                            ) : null}
-                        </header>
-                    ) : null}
-
-                    <div
-                        className={
-                            only === "category"
-                                ? "scrollbar-subtle min-h-0 flex-1 overflow-auto"
-                                : "scrollbar-subtle max-h-[320px] overflow-auto"
-                        }
-                    >
-                        <CategoryTree
-                            nodes={categoryTree}
-                            value={value.categoryCode}
-                            onChange={(code) => onChange({ ...value, categoryCode: code })}
-                            forceExpandedCodes={forceExpandedCodes}
-                            size={only ? "lg" : "sm"}
-                        />
+            {showSectionTitles ? (
+                <div>
+                    <h2 className="mb-3 text-base font-semibold">필터</h2>
+                    <div className="flex flex-col gap-6">
+                        {categorySection}
+                        {priceSection}
+                        {settingsSection}
                     </div>
-                </section>
-            ) : null}
-
-            {show("price") ? (
-                <section className={only ? "space-y-1" : "mb-8 space-y-2"}>
-                    {only ? null : (
-                        <h3 className="text-sm font-medium text-muted-foreground">가격 범위</h3>
-                    )}
-                    <div className="flex items-center gap-2">
-                        <Input
-                            aria-label="최소 가격"
-                            inputMode="numeric"
-                            placeholder="최소"
-                            value={value.priceMin}
-                            onChange={(e) =>
-                                onChange({
-                                    ...value,
-                                    priceMin: e.target.value.replace(/[^\d]/g, ""),
-                                })
-                            }
-                            className={only ? "h-12 text-base" : ""}
-                        />
-                        <span className="text-muted-foreground">~</span>
-                        <Input
-                            aria-label="최대 가격"
-                            inputMode="numeric"
-                            placeholder="최대"
-                            value={value.priceMax}
-                            onChange={(e) =>
-                                onChange({
-                                    ...value,
-                                    priceMax: e.target.value.replace(/[^\d]/g, ""),
-                                })
-                            }
-                            className={only ? "h-12 text-base" : ""}
-                        />
-                    </div>
-                </section>
-            ) : null}
-
-            {show("community") ? (
-                <section className={only ? "space-y-1" : "mb-8 space-y-2"}>
-                    {only ? null : (
-                        <h3 className="text-sm font-medium text-muted-foreground">커뮤니티</h3>
-                    )}
-                    <ul className={only ? "space-y-1" : "space-y-1"}>
-                        {communityGroups.map((g) => {
-                            const checked = g.platforms.every((p) => value.platforms.includes(p));
-                            return (
-                                <li key={g.communityName}>
-                                    <label
-                                        className={
-                                            only
-                                                ? "flex cursor-pointer items-center gap-3 py-1 text-base"
-                                                : "flex cursor-pointer items-center gap-2.5 py-1 text-sm"
-                                        }
-                                    >
-                                        <Checkbox
-                                            checked={checked}
-                                            onCheckedChange={() => toggleCommunity(g)}
-                                            className={only ? "size-5" : ""}
-                                        />
-                                        <span>{g.communityName}</span>
-                                    </label>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </section>
-            ) : null}
+                </div>
+            ) : (
+                <>
+                    {categorySection}
+                    {priceSection}
+                    {settingsSection}
+                </>
+            )}
 
             {onApply ? (
                 <div className="mt-3 flex gap-2">
