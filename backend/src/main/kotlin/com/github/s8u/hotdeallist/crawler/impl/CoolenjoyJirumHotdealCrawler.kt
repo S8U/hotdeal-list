@@ -94,8 +94,9 @@ class CoolenjoyJirumHotdealCrawler : HotdealCrawler {
             val likeCount = document.select("#bo_v_info .wr_good_cnt").text().trim().replace(",", "").toIntOrNull() ?: 0
             val isEnded = document.select("#bo_v_atc > b").text()?.contains("종료") ?: false
             val sourceUrl = document.select(".d-table-row.border-top.border-bottom a").text().substringBefore(" ")
-            val thumbnailImageUrl = "https://coolenjoy.net/" + document.select(".view-content img").first()?.attr("src")
-            val firstImageUrl = document.select(".view-content img").first()?.attr("src")
+            val rawImageUrl = document.select(".view-content img").first()?.attr("src")
+            val thumbnailImageUrl = rawImageUrl?.let { if (it.startsWith("/")) "https://coolenjoy.net$it" else it }
+            val firstImageUrl = rawImageUrl?.let { if (it.startsWith("/")) "https://coolenjoy.net$it" else it }
             val wroteAtString = document.select("#bo_v_info time").attr("datetime")
             val wroteAt = OffsetDateTime.parse(wroteAtString).toLocalDateTime()
 
