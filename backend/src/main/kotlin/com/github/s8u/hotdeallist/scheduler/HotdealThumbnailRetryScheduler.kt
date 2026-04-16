@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConditionalOnProperty(prefix = "app", name = ["mode"], havingValue = "CRAWLING_API")
-class HotdealThumbnailScheduler(
+class HotdealThumbnailRetryScheduler(
     private val hotdealRawRepository: HotdealRawRepository,
     private val hotdealRepository: HotdealRepository,
     private val hotdealSearchService: HotdealSearchService,
