@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 class HotdealServiceFacade(
     private val hotdealRepository: HotdealRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
-    private val hotdealRawService: HotdealRawService,
+    private val hotdealRawCrawlService: HotdealRawCrawlService,
     private val hotdealService: HotdealService,
     private val hotdealProcessService: HotdealProcessService,
     private val hotdealCrawlerResolver: HotdealCrawlerResolver
@@ -39,7 +39,7 @@ class HotdealServiceFacade(
         logger.info("Creating hotdeal platformType={}, page={}", platformType, page)
 
         // 핫딜 크롤링
-        val rawIds = hotdealRawService.crawlHotdealRaw(platformType, page, delay)
+        val rawIds = hotdealRawCrawlService.crawlHotdealRaw(platformType, page, delay)
 
         // 핫딜 저장
         rawIds.forEach { rawId, _ ->
