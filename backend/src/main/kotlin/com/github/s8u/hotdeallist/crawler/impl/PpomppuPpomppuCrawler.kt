@@ -32,7 +32,10 @@ class PpomppuPpomppuCrawler : HotdealCrawler {
     }
 
     override fun crawlList(page: Int): HotdealCrawlListDto {
-        val document = Jsoup.connect("https://www.ppomppu.co.kr/zboard/zboard.php?id=ppomppu&page=${page}").get()
+        val document = Jsoup.connect("https://www.ppomppu.co.kr/zboard/zboard.php?id=ppomppu&page=${page}")
+            .execute()
+            .charset("euc-kr")
+            .parse()
 
         val rowElements = document.select("#revolution_main_table .baseList:not(.hotpop_bg_color)")
             .filter { it.select(".baseList-numb").text().toIntOrNull() != null }
@@ -79,7 +82,10 @@ class PpomppuPpomppuCrawler : HotdealCrawler {
         lateinit var document: Document
 
         try {
-            document = Jsoup.connect(url).get()
+            document = Jsoup.connect(url)
+                .execute()
+                .charset("euc-kr")
+                .parse()
 
             val title = document.select(".container #topTitle h1").clone().apply { select("span").remove() }.text()
             val category = null
