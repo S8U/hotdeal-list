@@ -93,7 +93,7 @@ function CategoryTreeItem({
                         <ChevronRight
                             className={cn(
                                 "transition-transform",
-                                lg ? "size-4" : "size-3.5",
+                                lg ? "size-4" : "size-3",
                                 open && "rotate-90",
                             )}
                         />

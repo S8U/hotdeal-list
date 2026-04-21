@@ -121,7 +121,7 @@ function Chip({
             )}
         >
             <span className="truncate">{children}</span>
-            <CaretDownIcon className="size-3.5" weight="bold" />
+            <CaretDownIcon className="size-4" weight="bold" />
         </button>
     );
 }

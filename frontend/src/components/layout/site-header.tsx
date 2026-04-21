@@ -263,7 +263,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                                     className="cursor-pointer opacity-0 group-hover:opacity-100"
                                                     aria-label={`${term} 삭제`}
                                                 >
-                                                    <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+                                                    <XIcon className="size-4 text-muted-foreground hover:text-foreground" />
                                                 </button>
                                             </div>
                                         ))}

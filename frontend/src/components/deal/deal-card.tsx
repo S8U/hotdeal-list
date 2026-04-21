@@ -102,12 +102,12 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         <button
                             type="button"
                             onClick={() => onCategoryClick(leafCode)}
-                            className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-primary"
+                            className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-primary"
                         >
                             <span className="truncate">{categoryLabelShort}</span>
                         </button>
                     ) : categoryLabelShort ? (
-                        <span className="inline-flex w-fit max-w-full items-center rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-zinc-500">
+                        <span className="inline-flex w-fit max-w-full items-center rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                             <span className="truncate">{categoryLabelShort}</span>
                         </span>
                     ) : null}
