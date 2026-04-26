@@ -21,10 +21,6 @@ logs
 npm-debug.log*
 pnpm-debug.log*
 
-# Environment files
-.env*
-!.env.example
-
 # Test files
 coverage
 .nyc_output
