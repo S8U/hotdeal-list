@@ -24,6 +24,7 @@ import { getCategorySubtreeCodes } from "@/lib/categories";
 import { toCommunityGroups, toPlatformCommunityMap, type PlatformType } from "@/lib/communities";
 import { gtmEvent } from "@/lib/gtm";
 import type { CategoryNode } from "@/lib/types";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { useInitialFilterFromParams, useFilterParamsSync } from "@/lib/use-filter-params";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
@@ -45,6 +46,10 @@ function HomeContent() {
     const [keyword, setKeyword] = useState(initialKeyword);
 
     useFilterParamsSync(filter, keyword);
+
+    const trimmedKeyword = keyword.trim();
+    useDocumentTitle(trimmedKeyword ? `${trimmedKeyword} - 핫딜리스트 검색` : "핫딜리스트");
+
     const [sheetOpen, setSheetOpen] = useState(false);
     const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
 
