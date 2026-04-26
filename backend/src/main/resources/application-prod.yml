@@ -1,6 +1,15 @@
 # 서버 설정
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /dev
+      prefix: stdout
+      suffix: ""
+      file-date-format: ""
+      buffered: false
+      pattern: '%h %l %u %t "%r" %s %b %D "%{Referer}i" "%{User-Agent}i"'
 
 spring:
   # 데이터베이스 설정
@@ -40,15 +49,6 @@ logging:
     org.hibernate.SQL: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} [%X{traceId}] - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} [%X{traceId}] - %msg%n"
-  file:
-    name: /var/log/hotdeal-list/hotdeal-list.log
-  logback:
-    rollingpolicy:
-      file-name-pattern: /var/log/hotdeal-list/hotdeal-list-%d{yyyy-MM-dd}.%i.log
-      max-file-size: 10MB
-      max-history: 30
-      total-size-cap: 1GB
 
 # URL 설정
 base-url:
