@@ -15,6 +15,7 @@ import {
 import { useGetPriceHistory } from "@/api/generated/hotdeal/hotdeal";
 import type { HotdealSummary } from "@/api/generated/model";
 import { formatPrice } from "@/lib/format";
+import { gtmEvent } from "@/lib/gtm";
 import {
     Dialog,
     DialogTrigger,
@@ -36,7 +37,15 @@ export function PriceHistoryButton({ hotdealId, productName }: PriceHistoryDialo
     const [open, setOpen] = useState(false);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+            open={open}
+            onOpenChange={(next) => {
+                setOpen(next);
+                if (next) {
+                    gtmEvent("price_history_open", { hotdealId, productName });
+                }
+            }}
+        >
             <DialogTrigger
                 render={
                     <button
@@ -152,7 +161,7 @@ function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
 
             {selectedItem ? (
                 <div className="w-full border-t pt-4 lg:w-72 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
-                    <DealListPanel selectedDate={selectedDate} selectedItem={selectedItem} />
+                    <DealListPanel selectedDate={selectedDate} selectedItem={selectedItem} sourceHotdealId={hotdealId} />
                 </div>
             ) : (
                 <p className="text-center text-xs text-muted-foreground lg:flex lg:w-72 lg:items-center lg:justify-center lg:border-l lg:pl-4">
@@ -285,9 +294,11 @@ function PriceChart({
 function DealListPanel({
     selectedDate,
     selectedItem,
+    sourceHotdealId,
 }: {
     selectedDate: string | null;
     selectedItem: ChartDataItem;
+    sourceHotdealId: number;
 }) {
     if (!selectedItem.hotdeals.length) {
         return (
@@ -310,6 +321,13 @@ function DealListPanel({
                             href={deal.url}
                             target="_blank"
                             rel="noreferrer"
+                            onClick={() =>
+                                gtmEvent("price_history_deal_click", {
+                                    hotdealId: deal.id,
+                                    sourceHotdealId,
+                                    date: selectedDate,
+                                })
+                            }
                             className="group/deal flex items-start gap-2 rounded-md border p-2 transition-colors hover:bg-muted"
                         >
                             {deal.thumbnailUrl ? (

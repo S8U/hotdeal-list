@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { getCategorySubtreeCodes } from "@/lib/categories";
 import { toCommunityGroups, toPlatformCommunityMap, type PlatformType } from "@/lib/communities";
+import { gtmEvent } from "@/lib/gtm";
 import type { CategoryNode } from "@/lib/types";
 import { useInitialFilterFromParams, useFilterParamsSync } from "@/lib/use-filter-params";
 
@@ -96,6 +97,7 @@ function HomeContent() {
         const io = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    gtmEvent("infinite_scroll_load", { pageIndex: data?.pages.length ?? 0 });
                     fetchNextPage();
                 }
             },
@@ -103,11 +105,29 @@ function HomeContent() {
         );
         io.observe(el);
         return () => io.disconnect();
-    }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage, data?.pages.length]);
+
+    const isFirstFilterRef = useRef(true);
+    useEffect(() => {
+        if (isFirstFilterRef.current) {
+            isFirstFilterRef.current = false;
+            return;
+        }
+        const timer = setTimeout(() => {
+            gtmEvent("filter_apply", {
+                categoryCode: filter.categoryCode,
+                platforms: filter.platforms,
+                priceMin: filter.priceMin,
+                priceMax: filter.priceMax,
+            });
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [filter]);
 
     const [pendingFilter, setPendingFilter] = useState<FilterState>(filter);
 
     const openChipSheet = (key: FilterChipKey) => {
+        gtmEvent("filter_chip_open", { chip: key });
         setPendingFilter(filter);
         setActiveChip(key);
         setSheetOpen(true);
@@ -125,7 +145,10 @@ function HomeContent() {
                         communityGroups={communityGroups}
                         value={filter}
                         onOpen={openChipSheet}
-                        onReset={() => setFilter(INITIAL_FILTER)}
+                        onReset={() => {
+                            gtmEvent("filter_reset");
+                            setFilter(INITIAL_FILTER);
+                        }}
                     />
                 }
             />
@@ -204,6 +227,12 @@ function HomeContent() {
                         value={pendingFilter}
                         onChange={setPendingFilter}
                         onApply={() => {
+                            gtmEvent("filter_apply", {
+                                categoryCode: pendingFilter.categoryCode,
+                                platforms: pendingFilter.platforms,
+                                priceMin: pendingFilter.priceMin,
+                                priceMax: pendingFilter.priceMax,
+                            });
                             setFilter(pendingFilter);
                             setSheetOpen(false);
                         }}

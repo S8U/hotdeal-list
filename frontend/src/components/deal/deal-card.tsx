@@ -19,6 +19,7 @@ import type { HotdealResponse } from "@/api/generated/model";
 import { findCategoryPath, pickLeafCode } from "@/lib/categories";
 import type { PlatformType } from "@/lib/communities";
 import { formatCompact, formatPrice, formatRelativeTime } from "@/lib/format";
+import { gtmEvent } from "@/lib/gtm";
 import type { CategoryNode } from "@/lib/types";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -57,6 +58,14 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
 
     const ended = !!deal.ended;
 
+    const trackDealClick = () =>
+        gtmEvent("deal_click", {
+            hotdealId: deal.id,
+            platformType: deal.platformType,
+            categoryCode: leafCode,
+            price: deal.price,
+        });
+
     return (
         <div className={`group relative flex cursor-pointer gap-3 rounded-xl bg-background p-2 sm:gap-4 sm:p-3${ended ? " opacity-60" : ""}`}>
             <a
@@ -65,6 +74,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                 aria-label={deal.title}
                 target="_blank"
                 rel="noreferrer"
+                onClick={trackDealClick}
             >
                 {thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -101,7 +111,10 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                     {leafCode && onCategoryClick ? (
                         <button
                             type="button"
-                            onClick={() => onCategoryClick(leafCode)}
+                            onClick={() => {
+                                gtmEvent("deal_category_click", { categoryCode: leafCode });
+                                onCategoryClick(leafCode);
+                            }}
                             className="inline-flex w-fit max-w-full cursor-pointer items-center rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-primary"
                         >
                             <span className="truncate">{categoryLabelShort}</span>
@@ -115,7 +128,10 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         <CommunityTag
                             platformType={deal.platformType as PlatformType}
                             platformCommunityMap={platformCommunityMap}
-                            onClick={onCommunityClick ? () => onCommunityClick(deal.platformType as PlatformType) : undefined}
+                            onClick={onCommunityClick ? () => {
+                                gtmEvent("deal_community_click", { platformType: deal.platformType });
+                                onCommunityClick(deal.platformType as PlatformType);
+                            } : undefined}
                         />
                     ) : null}
                 </div>
@@ -126,6 +142,7 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                     aria-label={deal.title}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={trackDealClick}
                 >
                     {deal.highlightedTitle ? (
                         <h3

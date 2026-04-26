@@ -15,6 +15,7 @@ import { useSuggest } from "@/api/generated/hotdeal/hotdeal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { gtmEvent } from "@/lib/gtm";
 import {
     addRecentSearch,
     clearRecentSearches,
@@ -63,6 +64,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         const trimmed = value.trim();
         if (trimmed) {
             setRecentSearches(addRecentSearch(trimmed));
+            gtmEvent("search", { keyword: trimmed });
         }
         onSearch?.(trimmed);
         setDesktopFocused(false);
@@ -73,6 +75,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
     }, [onSearch]);
 
     const handleRecentClick = useCallback((value: string) => {
+        gtmEvent("recent_search_click", { keyword: value });
         setDraft(value);
         handleSubmit(value);
     }, [handleSubmit]);
@@ -119,9 +122,11 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         : [];
 
     const handleSuggestionClick = useCallback((value: string) => {
+        const query = (searchOpen ? mobileDraft : draft).trim();
+        gtmEvent("search_suggestion_click", { keyword: value, query });
         setDraft(value);
         handleSubmit(value);
-    }, [handleSubmit]);
+    }, [handleSubmit, searchOpen, mobileDraft, draft]);
 
     // 키보드 네비게이션
     const [activeIndex, setActiveIndex] = useState(-1);
@@ -355,6 +360,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                     if (e.nativeEvent.isComposing) return;
                                     if (mobileItems.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Enter" && activeIndex >= 0))) {
                                         handleKeyNav(e, mobileItems, (value) => {
+                                            gtmEvent("search_suggestion_click", { keyword: value, query: mobileDraft.trim() });
                                             setMobileDraft(value);
                                             handleSubmit(value);
                                         });
@@ -383,6 +389,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
                                                 type="button"
                                                 className="flex-1 cursor-pointer truncate text-left text-sm"
                                                 onClick={() => {
+                                                    gtmEvent("search_suggestion_click", { keyword: term, query: mobileDraft.trim() });
                                                     setMobileDraft(term);
                                                     handleSubmit(term);
                                                 }}
