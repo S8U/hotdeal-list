@@ -39,7 +39,7 @@ export const listCategories = (
 
 
       return customInstance<CategoryResponse[]>(
-      {url: `/api/v1/categories`, method: 'GET', signal
+      {url: `/v1/categories`, method: 'GET', signal
     },
       );
     }
@@ -49,7 +49,7 @@ export const listCategories = (
 
 export const getListCategoriesQueryKey = () => {
     return [
-    `/api/v1/categories`
+    `/v1/categories`
     ] as const;
     }
 

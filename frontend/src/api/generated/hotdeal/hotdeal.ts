@@ -49,7 +49,7 @@ export const listHotdeals = (
 
 
       return customInstance<HotdealListResponse>(
-      {url: `/api/v1/hotdeals`, method: 'GET',
+      {url: `/v1/hotdeals`, method: 'GET',
         params, signal
     },
       );
@@ -60,13 +60,13 @@ export const listHotdeals = (
 
 export const getListHotdealsInfiniteQueryKey = (params?: ListHotdealsParams,) => {
     return [
-    'infinite', `/api/v1/hotdeals`, ...(params ? [params] : [])
+    'infinite', `/v1/hotdeals`, ...(params ? [params] : [])
     ] as const;
     }
 
 export const getListHotdealsQueryKey = (params?: ListHotdealsParams,) => {
     return [
-    `/api/v1/hotdeals`, ...(params ? [params] : [])
+    `/v1/hotdeals`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -215,7 +215,7 @@ export const getHotdeal = (
 
 
       return customInstance<HotdealResponse>(
-      {url: `/api/v1/hotdeals/${id}`, method: 'GET', signal
+      {url: `/v1/hotdeals/${id}`, method: 'GET', signal
     },
       );
     }
@@ -225,7 +225,7 @@ export const getHotdeal = (
 
 export const getGetHotdealQueryKey = (id: number,) => {
     return [
-    `/api/v1/hotdeals/${id}`
+    `/v1/hotdeals/${id}`
     ] as const;
     }
 
@@ -308,7 +308,7 @@ export const getPriceHistory = (
 
 
       return customInstance<PriceHistoryResponse>(
-      {url: `/api/v1/hotdeals/${id}/price-history`, method: 'GET', signal
+      {url: `/v1/hotdeals/${id}/price-history`, method: 'GET', signal
     },
       );
     }
@@ -318,7 +318,7 @@ export const getPriceHistory = (
 
 export const getGetPriceHistoryQueryKey = (id: number,) => {
     return [
-    `/api/v1/hotdeals/${id}/price-history`
+    `/v1/hotdeals/${id}/price-history`
     ] as const;
     }
 
@@ -401,7 +401,7 @@ export const suggest = (
 
 
       return customInstance<SuggestResponse>(
-      {url: `/api/v1/hotdeals/suggest`, method: 'GET',
+      {url: `/v1/hotdeals/suggest`, method: 'GET',
         params, signal
     },
       );
@@ -412,7 +412,7 @@ export const suggest = (
 
 export const getSuggestQueryKey = (params?: SuggestParams,) => {
     return [
-    `/api/v1/hotdeals/suggest`, ...(params ? [params] : [])
+    `/v1/hotdeals/suggest`, ...(params ? [params] : [])
     ] as const;
     }
 

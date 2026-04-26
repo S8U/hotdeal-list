@@ -18,7 +18,7 @@ class WebConfig(
 
         if (origins.isEmpty()) return
 
-        registry.addMapping("/api/**")
+        registry.addMapping("/v1/**")
             .allowedOrigins(*origins)
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("*")

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/v1/categories")
 @Tag(name = "Category", description = "카테고리 API")
 class CategoryController(
     private val categoryRepository: CategoryRepository

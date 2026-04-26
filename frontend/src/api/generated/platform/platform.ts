@@ -39,7 +39,7 @@ export const listPlatforms = (
 
 
       return customInstance<PlatformResponse[]>(
-      {url: `/api/v1/platforms`, method: 'GET', signal
+      {url: `/v1/platforms`, method: 'GET', signal
     },
       );
     }
@@ -49,7 +49,7 @@ export const listPlatforms = (
 
 export const getListPlatformsQueryKey = () => {
     return [
-    `/api/v1/platforms`
+    `/v1/platforms`
     ] as const;
     }
 

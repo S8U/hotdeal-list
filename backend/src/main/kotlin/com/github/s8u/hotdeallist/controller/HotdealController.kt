@@ -17,7 +17,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/v1/hotdeals")
+@RequestMapping("/v1/hotdeals")
 @Tag(name = "Hotdeal", description = "핫딜 조회 API")
 @Validated
 class HotdealController(

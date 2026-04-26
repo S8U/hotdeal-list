@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/platforms")
+@RequestMapping("/v1/platforms")
 @Tag(name = "Platform", description = "플랫폼 API")
 class PlatformController {
 
