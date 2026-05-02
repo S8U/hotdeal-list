@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     Armchair,
@@ -202,7 +202,18 @@ const formatAbsolute = (iso: string) =>
     });
 
 function TimeLabel({ iso }: { iso: string }) {
+    const [mounted, setMounted] = useState(false);
     const [showAbsolute, setShowAbsolute] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // SSR/첫 hydrate 시에는 dateTime만 채운 빈 라벨을 그려 mismatch를 피한다.
+    // 마운트 이후 실제 시간 문자열을 채운다.
+    const mobileText = mounted ? (showAbsolute ? formatAbsolute(iso) : formatRelativeTime(iso)) : "";
+    const desktopText = mounted ? formatRelativeTime(iso) : "";
+    const absoluteText = mounted ? formatAbsolute(iso) : "";
 
     return (
         <>
@@ -211,8 +222,9 @@ function TimeLabel({ iso }: { iso: string }) {
                 dateTime={iso}
                 className="relative z-10 shrink-0 text-xs text-muted-foreground lg:hidden"
                 onClick={() => setShowAbsolute((v) => !v)}
+                suppressHydrationWarning
             >
-                {showAbsolute ? formatAbsolute(iso) : formatRelativeTime(iso)}
+                {mobileText}
             </time>
             {/* 데스크톱: Tooltip */}
             <TooltipProvider>
@@ -222,12 +234,13 @@ function TimeLabel({ iso }: { iso: string }) {
                             <time
                                 dateTime={iso}
                                 className="relative z-10 hidden shrink-0 text-xs text-muted-foreground lg:inline"
+                                suppressHydrationWarning
                             >
-                                {formatRelativeTime(iso)}
+                                {desktopText}
                             </time>
                         }
                     />
-                    <TooltipContent>{formatAbsolute(iso)}</TooltipContent>
+                    <TooltipContent>{absoluteText}</TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </>

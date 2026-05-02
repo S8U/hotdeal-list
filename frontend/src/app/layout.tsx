@@ -5,9 +5,41 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { GTM_ID } from "@/lib/gtm";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
-    title: "핫딜리스트",
-    description: "여러 커뮤니티의 핫딜을 한 곳에서",
+    metadataBase: new URL(SITE_URL),
+    title: {
+        default: "핫딜리스트",
+        template: "%s",
+    },
+    description:
+        "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.",
+    applicationName: "핫딜리스트",
+    keywords: ["핫딜", "할인", "특가", "세일", "쇼핑"],
+    openGraph: {
+        type: "website",
+        siteName: "핫딜리스트",
+        locale: "ko_KR",
+        title: "핫딜리스트",
+        description:
+            "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.",
+        url: "/",
+    },
+    twitter: {
+        card: "summary",
+        title: "핫딜리스트",
+        description:
+            "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.",
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true, "max-image-preview": "large" },
+    },
+    icons: {
+        icon: "/favicon.ico",
+    },
 };
 
 export default function RootLayout({

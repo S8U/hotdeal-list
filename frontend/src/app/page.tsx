@@ -1,31 +1,24 @@
-"use client";
+import { cache } from "react";
+import type { Metadata } from "next";
+import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-
-import { useListCategories } from "@/api/generated/category/category";
-import { useListHotdealsInfinite } from "@/api/generated/hotdeal/hotdeal";
-import { useListPlatforms } from "@/api/generated/platform/platform";
-import type { CategoryResponse, HotdealListResponse } from "@/api/generated/model";
-import { DealGrid } from "@/components/deal/deal-grid";
-import { FilterChips, type FilterChipKey } from "@/components/filter/filter-chips";
 import {
-    FilterSidebar,
-    INITIAL_FILTER,
-    type FilterState,
-} from "@/components/filter/filter-sidebar";
-import { SiteHeader } from "@/components/layout/site-header";
+    getListCategoriesQueryKey,
+    listCategories,
+} from "@/api/generated/category/category";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet";
-import { getCategorySubtreeCodes } from "@/lib/categories";
-import { toCommunityGroups, toPlatformCommunityMap, type PlatformType } from "@/lib/communities";
-import { gtmEvent } from "@/lib/gtm";
+    getListHotdealsInfiniteQueryOptions,
+} from "@/api/generated/hotdeal/hotdeal";
+import {
+    getListPlatformsQueryKey,
+    listPlatforms,
+} from "@/api/generated/platform/platform";
+import type { CategoryResponse } from "@/api/generated/model";
+import { findCategoryPath, getCategorySubtreeCodes } from "@/lib/categories";
+import { parseFilterParams } from "@/lib/filter-params";
 import type { CategoryNode } from "@/lib/types";
-import { useDocumentTitle } from "@/lib/use-document-title";
-import { useInitialFilterFromParams, useFilterParamsSync } from "@/lib/use-filter-params";
+
+import HomeClient from "./home-client";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
 
@@ -40,221 +33,160 @@ const toCategoryNodes = (raw: CategoryWithChildren[] | undefined): CategoryNode[
         }));
 };
 
-function HomeContent() {
-    const { initialFilter, initialKeyword } = useInitialFilterFromParams();
-    const [filter, setFilter] = useState<FilterState>(initialFilter);
-    const [keyword, setKeyword] = useState(initialKeyword);
+// 동일 요청 내에서 generateMetadata와 Home 양쪽이 카테고리 응답을 공유한다.
+// 백엔드 호출 실패는 빈 배열로 폴백하여 메타/페이지 양쪽 모두 안전하게 진행.
+const getCategoriesRaw = cache(async (): Promise<CategoryWithChildren[]> => {
+    try {
+        return ((await listCategories()) as CategoryWithChildren[] | undefined) ?? [];
+    } catch {
+        return [];
+    }
+});
 
-    useFilterParamsSync(filter, keyword);
+const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
+    return toCategoryNodes(await getCategoriesRaw());
+});
 
-    const trimmedKeyword = keyword.trim();
-    useDocumentTitle(trimmedKeyword ? `${trimmedKeyword} - 핫딜리스트 검색` : "핫딜리스트");
-
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
-
-    const { data: categoriesRaw } = useListCategories();
-    const categoryTree = useMemo(
-        () => toCategoryNodes(categoriesRaw as CategoryWithChildren[] | undefined),
-        [categoriesRaw],
-    );
-
-    const { data: platformsRaw } = useListPlatforms();
-    const communityGroups = useMemo(() => toCommunityGroups(platformsRaw), [platformsRaw]);
-    const platformCommunityMap = useMemo(() => toPlatformCommunityMap(communityGroups), [communityGroups]);
-
-    const categoryCodes = useMemo(() => {
-        if (!filter.categoryCode) return undefined;
-        const codes = getCategorySubtreeCodes(categoryTree, filter.categoryCode);
-        return codes.size ? Array.from(codes) : undefined;
-    }, [categoryTree, filter.categoryCode]);
-
-    const params = useMemo(
-        () => ({
-            size: 40,
-            keyword: keyword || undefined,
-            categories: categoryCodes,
-            platforms: filter.platforms.length ? filter.platforms : undefined,
-            minPrice: filter.priceMin ? Number(filter.priceMin) : undefined,
-            maxPrice: filter.priceMax ? Number(filter.priceMax) : undefined,
-        }),
-        [keyword, categoryCodes, filter.platforms, filter.priceMin, filter.priceMax],
-    );
-
-    const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
-        useListHotdealsInfinite(params, {
-            query: {
-                initialPageParam: undefined,
-                getNextPageParam: (lastPage: HotdealListResponse) =>
-                    lastPage.hasMore ? lastPage.nextCursor : undefined,
-            },
-        });
-
-    const deals = useMemo(
-        () => data?.pages.flatMap((p: HotdealListResponse) => p.items ?? []) ?? [],
-        [data],
-    );
-
-    const sentinelRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        const el = sentinelRef.current;
-        if (!el) return;
-        const io = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-                    gtmEvent("infinite_scroll_load", { pageIndex: data?.pages.length ?? 0 });
-                    fetchNextPage();
-                }
-            },
-            { rootMargin: "400px" },
-        );
-        io.observe(el);
-        return () => io.disconnect();
-    }, [fetchNextPage, hasNextPage, isFetchingNextPage, data?.pages.length]);
-
-    const isFirstFilterRef = useRef(true);
-    useEffect(() => {
-        if (isFirstFilterRef.current) {
-            isFirstFilterRef.current = false;
-            return;
-        }
-        const timer = setTimeout(() => {
-            gtmEvent("filter_apply", {
-                categoryCode: filter.categoryCode,
-                platforms: filter.platforms,
-                priceMin: filter.priceMin,
-                priceMax: filter.priceMax,
-            });
-        }, 250);
-        return () => clearTimeout(timer);
-    }, [filter]);
-
-    const [pendingFilter, setPendingFilter] = useState<FilterState>(filter);
-
-    const openChipSheet = (key: FilterChipKey) => {
-        gtmEvent("filter_chip_open", { chip: key });
-        setPendingFilter(filter);
-        setActiveChip(key);
-        setSheetOpen(true);
-    };
-
-    return (
-        <div className="min-h-screen bg-muted/50">
-            <SiteHeader
-                keyword={keyword}
-                onSearch={setKeyword}
-                mobileSlot={
-                    <FilterChips
-                        categoryTree={categoryTree}
-                        platformCommunityMap={platformCommunityMap}
-                        communityGroups={communityGroups}
-                        value={filter}
-                        onOpen={openChipSheet}
-                        onReset={() => {
-                            gtmEvent("filter_reset");
-                            setFilter(INITIAL_FILTER);
-                        }}
-                    />
-                }
-            />
-
-            <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 pb-6 sm:px-6">
-                <FilterSidebar
-                    categoryTree={categoryTree}
-                    communityGroups={communityGroups}
-                    value={filter}
-                    onChange={setFilter}
-                    className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 self-start overflow-auto pt-2 pr-2 pb-6 sm:pt-3 lg:block"
-                />
-
-                <main className="min-w-0 flex-1 pt-2 sm:pt-3">
-                    {isError ? (
-                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
-                            핫딜을 불러오지 못했습니다.
-                        </div>
-                    ) : isLoading ? (
-                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
-                            불러오는 중...
-                        </div>
-                    ) : (
-                        <>
-                            <DealGrid
-                                deals={deals}
-                                categoryTree={categoryTree}
-                                platformCommunityMap={platformCommunityMap}
-                                onCategoryClick={(categoryCode) =>
-                                    setFilter({ ...INITIAL_FILTER, categoryCode })
-                                }
-                                onCommunityClick={(platformType: PlatformType) => {
-                                    const group = communityGroups.find((g) =>
-                                        g.platforms.includes(platformType),
-                                    );
-                                    if (group) {
-                                        setFilter({ ...INITIAL_FILTER, platforms: group.platforms as PlatformType[] });
-                                    }
-                                }}
-                            />
-                            <div ref={sentinelRef} className="h-10" />
-                            {isFetchingNextPage ? (
-                                <div className="py-4 text-center text-sm text-muted-foreground">
-                                    불러오는 중...
-                                </div>
-                            ) : null}
-                        </>
-                    )}
-                </main>
-            </div>
-
-            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent
-                    side="bottom"
-                    showCloseButton={false}
-                    className={
-                        activeChip === "category"
-                            ? "flex !h-[75vh] flex-col rounded-t-2xl px-5 pt-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-                            : "flex max-h-[85vh] flex-col rounded-t-2xl px-5 pt-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-                    }
-                >
-                    <SheetHeader className="px-0 py-0">
-                        <SheetTitle className="text-xl font-bold leading-none text-foreground">
-                            {activeChip === "category"
-                                ? "카테고리"
-                                : activeChip === "price"
-                                  ? "가격 범위"
-                                  : activeChip === "community"
-                                    ? "커뮤니티"
-                                    : "필터"}
-                        </SheetTitle>
-                    </SheetHeader>
-                    <FilterSidebar
-                        categoryTree={categoryTree}
-                        communityGroups={communityGroups}
-                        value={pendingFilter}
-                        onChange={setPendingFilter}
-                        onApply={() => {
-                            gtmEvent("filter_apply", {
-                                categoryCode: pendingFilter.categoryCode,
-                                platforms: pendingFilter.platforms,
-                                priceMin: pendingFilter.priceMin,
-                                priceMax: pendingFilter.priceMax,
-                            });
-                            setFilter(pendingFilter);
-                            setSheetOpen(false);
-                        }}
-                        className="flex min-h-0 flex-1 flex-col"
-                        only={activeChip ?? undefined}
-                        hideTitle
-                    />
-                </SheetContent>
-            </Sheet>
-        </div>
-    );
+function resolveCategoryName(tree: CategoryNode[], code: string): string {
+    const path = findCategoryPath(tree, code);
+    return path?.at(-1)?.name ?? code;
 }
 
-export default function Home() {
+type SearchParamsRecord = Record<string, string | string[] | undefined>;
+
+function toURLSearchParams(input: SearchParamsRecord): URLSearchParams {
+    const sp = new URLSearchParams();
+    for (const [key, value] of Object.entries(input)) {
+        if (value === undefined) continue;
+        if (Array.isArray(value)) {
+            for (const v of value) sp.append(key, v);
+        } else {
+            sp.set(key, value);
+        }
+    }
+    return sp;
+}
+
+function describeFilters(
+    keyword: string,
+    categoryLabel: string | null,
+    platforms: string[],
+    priceMin: string,
+    priceMax: string,
+): string {
+    const parts: string[] = [];
+    if (keyword) parts.push(`'${keyword}' 검색`);
+    if (categoryLabel) parts.push(`카테고리 ${categoryLabel}`);
+    if (platforms.length) parts.push(`커뮤니티 ${platforms.join(", ")}`);
+    if (priceMin || priceMax) {
+        parts.push(`가격 ${priceMin || "0"}~${priceMax || "∞"}`);
+    }
+    return parts.length
+        ? `${parts.join(" · ")} 핫딜 모음 - 여러 커뮤니티의 실시간 핫딜을 한 곳에서`
+        : "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.";
+}
+
+export async function generateMetadata({
+    searchParams,
+}: {
+    searchParams: Promise<SearchParamsRecord>;
+}): Promise<Metadata> {
+    const sp = toURLSearchParams(await searchParams);
+    const { filter, keyword } = parseFilterParams(sp);
+    const trimmed = keyword.trim();
+
+    const categoryTree = filter.categoryCode ? await getCategoryTree() : [];
+    const categoryLabel = filter.categoryCode
+        ? resolveCategoryName(categoryTree, filter.categoryCode)
+        : null;
+
+    const title = trimmed ? `${trimmed} - 핫딜리스트 검색` : "핫딜리스트";
+    const description = describeFilters(
+        trimmed,
+        categoryLabel,
+        filter.platforms,
+        filter.priceMin,
+        filter.priceMax,
+    );
+
+    const qs = sp.toString();
+    const canonicalPath = qs ? `/?${qs}` : "/";
+
+    return {
+        title,
+        description,
+        alternates: { canonical: canonicalPath },
+        openGraph: {
+            title,
+            description,
+            url: canonicalPath,
+            type: "website",
+            siteName: "핫딜리스트",
+            locale: "ko_KR",
+        },
+        twitter: {
+            card: "summary",
+            title,
+            description,
+        },
+    };
+}
+
+export default async function Home({
+    searchParams,
+}: {
+    searchParams: Promise<SearchParamsRecord>;
+}) {
+    const sp = toURLSearchParams(await searchParams);
+    const { filter, keyword } = parseFilterParams(sp);
+
+    const queryClient = new QueryClient({
+        defaultOptions: { queries: { staleTime: 30_000 } },
+    });
+
+    // generateMetadata와 공유되는 cached 호출. 동일 요청 내에서는 backend로 한 번만 나감.
+    const categoriesRaw = await getCategoriesRaw();
+    if (categoriesRaw.length) {
+        // 클라이언트가 useListCategories()로 즉시 캐시 hit 하도록 raw 응답을 dehydrate에 포함.
+        queryClient.setQueryData(getListCategoriesQueryKey(), categoriesRaw);
+    }
+    const categoryTree = toCategoryNodes(categoriesRaw);
+
+    // 플랫폼은 메타에 영향 없으므로 page에서만 prefetch
+    await queryClient
+        .prefetchQuery({
+            queryKey: getListPlatformsQueryKey(),
+            queryFn: ({ signal }) => listPlatforms(signal),
+        })
+        .catch(() => undefined);
+
+    const categoryCodes = filter.categoryCode
+        ? Array.from(getCategorySubtreeCodes(categoryTree, filter.categoryCode))
+        : undefined;
+
+    const params = {
+        size: 40,
+        keyword: keyword || undefined,
+        categories: categoryCodes && categoryCodes.length ? categoryCodes : undefined,
+        platforms: filter.platforms.length ? filter.platforms : undefined,
+        minPrice: filter.priceMin ? Number(filter.priceMin) : undefined,
+        maxPrice: filter.priceMax ? Number(filter.priceMax) : undefined,
+    };
+
+    await queryClient
+        .prefetchInfiniteQuery({
+            // orval이 만들어주는 옵션 객체를 그대로 사용 (queryKey/queryFn 일치 보장)
+            ...getListHotdealsInfiniteQueryOptions(params),
+            initialPageParam: undefined,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any)
+        .catch(() => undefined);
+
+    const dehydrated = dehydrate(queryClient);
+
     return (
-        <Suspense>
-            <HomeContent />
-        </Suspense>
+        <HydrationBoundary state={dehydrated}>
+            <HomeClient initialFilter={filter} initialKeyword={keyword} />
+        </HydrationBoundary>
     );
 }

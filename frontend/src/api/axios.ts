@@ -1,7 +1,13 @@
 import Axios, { type AxiosRequestConfig } from "axios";
 
+const isServer = typeof window === "undefined";
+const baseURL =
+    (isServer && process.env.API_BASE_URL) ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "http://localhost:8080";
+
 export const AXIOS_INSTANCE = Axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080",
+    baseURL,
     paramsSerializer: {
         indexes: null, // platforms=A&platforms=B (Spring 호환, brackets 제거)
     },
