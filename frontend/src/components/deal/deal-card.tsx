@@ -44,9 +44,10 @@ type DealCardProps = {
     platformCommunityMap: Record<string, string>;
     onCategoryClick?: (categoryCode: string) => void;
     onCommunityClick?: (platformType: PlatformType) => void;
+    eager?: boolean;
 };
 
-export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryClick, onCommunityClick }: DealCardProps) {
+export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryClick, onCommunityClick, eager = false }: DealCardProps) {
     const leafCode = pickLeafCode(categoryTree, deal.categoryCodes);
     const path = leafCode ? findCategoryPath(categoryTree, leafCode) : null;
     const categoryLabelShort = path ? path.at(-1)!.name : leafCode ?? "";
@@ -82,7 +83,8 @@ export function DealCard({ deal, categoryTree, platformCommunityMap, onCategoryC
                         src={thumbnailUrl}
                         alt={deal.productName ?? deal.title ?? ""}
                         className="size-full object-cover mix-blend-multiply transition-transform duration-200 group-hover:scale-[1.02]"
-                        loading="lazy"
+                        loading={eager ? "eager" : "lazy"}
+                        decoding="async"
                         onError={(e) => {
                             e.currentTarget.style.display = "none";
                             e.currentTarget.parentElement
