@@ -14,6 +14,7 @@ class HotdealServiceFacade(
     private val hotdealRawCrawlService: HotdealRawCrawlService,
     private val hotdealService: HotdealService,
     private val hotdealProcessService: HotdealProcessService,
+    private val hotdealSearchService: HotdealSearchService,
     private val hotdealCrawlerResolver: HotdealCrawlerResolver
 ) {
 
@@ -44,21 +45,19 @@ class HotdealServiceFacade(
         // 핫딜 저장
         rawIds.forEach { rawId, _ ->
             try {
+                // 가공 데이터 없으면 생성
                 val hotdealProcess = hotdealProcessRepository.findFirstByHotdealRawIdOrderByIdDesc(rawId)
-                val hotdeal = hotdealRepository.findByHotdealRawId(rawId)
-
-                // 핫딜 데이터 가공
                 if (hotdealProcess == null) {
                     hotdealProcessService.processHotdealFromRaw(rawId)
                 }
 
-                // 핫딜 생성
-                if (hotdeal == null) {
-                    hotdealService.createHotdealFromRawAndProcess(rawId)
-                }
-                // 핫딜 업데이트
-                else {
-                    hotdealService.updateHotdealFromRaw(rawId)
+                // 핫딜 upsert
+                val hotdealId = hotdealService.upsertHotdealFromRawAndProcess(rawId)
+
+                // ES 색인
+                val hotdeal = hotdealRepository.findById(hotdealId).orElse(null)
+                if (hotdeal != null) {
+                    hotdealSearchService.indexHotdeal(hotdeal)
                 }
             } catch (e: Exception) {
                 logger.error("Failed to process hotdeal rawId={}, platformType={}", rawId, platformType, e)

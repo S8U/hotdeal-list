@@ -7,6 +7,7 @@ import com.github.s8u.hotdeallist.exception.BusinessException
 import com.github.s8u.hotdeallist.repository.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
@@ -21,64 +22,97 @@ class HotdealService(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun createHotdealFromRawAndProcess(rawId: Long) {
-        logger.info("Creating hotdeal from rawId={}", rawId)
+    @Transactional
+    fun upsertHotdealFromRawAndProcess(rawId: Long): Long {
+        logger.info("Upserting hotdeal from rawId={}", rawId)
 
-        // 핫딜 원본 데이터
+        // 원본 데이터 조회
         val hotdealRaw = hotdealRawRepository.findById(rawId)
             .orElseThrow { BusinessException("핫딜 원본 데이터를 찾을 수 없습니다.") }
 
-        // 핫딜 가공 데이터
-        // 가공 데이터가 없더라도 핫딜은 생성되어야 함. 나중에 재시도 처리
+        // 최신 가공 데이터 조회
         val hotdealProcess = hotdealProcessRepository.findFirstByHotdealRawIdOrderByIdDesc(rawId)
 
-        // 핫딜 생성
-        var hotdeal = Hotdeal(
-            hotdealRawId = rawId,
-            platformType = hotdealRaw.platformType,
-            platformPostId = hotdealRaw.platformPostId,
-            url = hotdealRaw.url,
-            title = hotdealRaw.title,
-            titleEn = hotdealProcess?.titleEn,
-            productName = hotdealProcess?.productName,
-            productNameEn = hotdealProcess?.productNameEn,
-            price = hotdealRaw.price ?: hotdealProcess?.price ?: BigDecimal.ZERO,
-            currencyUnit = hotdealRaw.currencyUnit ?: hotdealProcess?.currencyUnit ?: "KRW",
-            viewCount = hotdealRaw.viewCount ?: 0,
-            commentCount = hotdealRaw.commentCount ?: 0,
-            likeCount = hotdealRaw.likeCount ?: 0,
-            isEnded = hotdealRaw.isEnded ?: false,
-            sourceUrl = hotdealRaw.sourceUrl,
-            thumbnailPath = hotdealRaw.thumbnailPath,
-            wroteAt = hotdealRaw.wroteAt
-        )
+        // 기존 핫딜 조회
+        var hotdeal = hotdealRepository.findByHotdealRawId(rawId)
 
-        hotdeal = hotdealRepository.save(hotdeal)
+        if (hotdeal == null) {
+            // 신규 생성
+            hotdeal = Hotdeal(
+                hotdealRawId = rawId,
+                platformType = hotdealRaw.platformType,
+                platformPostId = hotdealRaw.platformPostId,
+                url = hotdealRaw.url,
+                title = hotdealRaw.title,
+                titleEn = hotdealProcess?.titleEn,
+                productName = hotdealProcess?.productName,
+                productNameEn = hotdealProcess?.productNameEn,
+                price = hotdealRaw.price ?: hotdealProcess?.price ?: BigDecimal.ZERO,
+                currencyUnit = hotdealRaw.currencyUnit ?: hotdealProcess?.currencyUnit ?: "KRW",
+                viewCount = hotdealRaw.viewCount ?: 0,
+                commentCount = hotdealRaw.commentCount ?: 0,
+                likeCount = hotdealRaw.likeCount ?: 0,
+                isEnded = hotdealRaw.isEnded ?: false,
+                sourceUrl = hotdealRaw.sourceUrl,
+                thumbnailPath = hotdealRaw.thumbnailPath,
+                wroteAt = hotdealRaw.wroteAt,
+                hotdealProcessId = hotdealProcess?.id
+            )
+            hotdeal = hotdealRepository.save(hotdeal)
 
-        // 핫딜 카테고리 생성
-        if (hotdealProcess != null) {
-            val category = categoryRepository.findByCode(hotdealProcess.categoryCode)
-                ?: throw BusinessException("카테고리를 찾을 수 없습니다.")
-
-            val hotdealCategories = mutableListOf<HotdealCategory>()
-            var currentCategory: Category? = category
-
-            while (currentCategory != null) {
-                hotdealCategories.add(
-                    HotdealCategory(
-                        hotdealId = hotdeal.id!!,
-                        categoryId = currentCategory.id!!
-                    )
-                )
-                currentCategory = currentCategory.parentId?.let { categoryRepository.findById(it).orElse(null) }
+            // 카테고리 생성
+            if (hotdealProcess != null) {
+                val category = categoryRepository.findByCode(hotdealProcess.categoryCode)
+                    ?: throw BusinessException("카테고리를 찾을 수 없습니다.")
+                hotdealCategoryRepository.saveAll(buildAncestorCategoryChain(hotdeal.id!!, category))
             }
 
-            hotdealCategoryRepository.saveAll(hotdealCategories)
+            logger.info("Upserted hotdeal created rawId={}, id={}", rawId, hotdeal.id)
+        } else {
+            // 메타 업데이트 (항상 반영)
+            hotdeal.viewCount = hotdealRaw.viewCount ?: 0
+            hotdeal.commentCount = hotdealRaw.commentCount ?: 0
+            hotdeal.likeCount = hotdealRaw.likeCount ?: 0
+            hotdeal.isEnded = hotdealRaw.isEnded ?: false
+
+            // 본문 + 카테고리는 process_id 변경 시만 반영
+            if (hotdealProcess != null && hotdeal.hotdealProcessId != hotdealProcess.id) {
+                hotdeal.titleEn = hotdealProcess.titleEn
+                hotdeal.productName = hotdealProcess.productName
+                hotdeal.productNameEn = hotdealProcess.productNameEn
+                hotdeal.price = hotdealRaw.price ?: hotdealProcess.price ?: hotdeal.price
+                hotdeal.currencyUnit = hotdealRaw.currencyUnit ?: hotdealProcess.currencyUnit ?: hotdeal.currencyUnit
+                hotdeal.hotdealProcessId = hotdealProcess.id
+
+                // 카테고리 재구성
+                hotdealCategoryRepository.deleteByHotdealId(hotdeal.id!!)
+                val category = categoryRepository.findByCode(hotdealProcess.categoryCode)
+                    ?: throw BusinessException("카테고리를 찾을 수 없습니다.")
+                hotdealCategoryRepository.saveAll(buildAncestorCategoryChain(hotdeal.id!!, category))
+            }
+
+            hotdealRepository.save(hotdeal)
+            logger.info("Upserted hotdeal updated rawId={}, id={}", rawId, hotdeal.id)
         }
 
-        hotdealSearchService.indexHotdeal(hotdeal)
+        return hotdeal.id!!
+    }
 
-        logger.info("Created hotdeal from rawId={}, id={}", rawId, hotdeal.id)
+    private fun buildAncestorCategoryChain(hotdealId: Long, leafCategory: Category): List<HotdealCategory> {
+        val hotdealCategories = mutableListOf<HotdealCategory>()
+        var currentCategory: Category? = leafCategory
+
+        while (currentCategory != null) {
+            hotdealCategories.add(
+                HotdealCategory(
+                    hotdealId = hotdealId,
+                    categoryId = currentCategory.id!!
+                )
+            )
+            currentCategory = currentCategory.parentId?.let { categoryRepository.findById(it).orElse(null) }
+        }
+
+        return hotdealCategories
     }
 
     fun updateHotdealFromRaw(rawId: Long) {

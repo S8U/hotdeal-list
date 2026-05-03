@@ -14,6 +14,7 @@ import java.time.LocalDateTime
     ],
     indexes = [
         Index(name = "idx_hotdeal_raw_id", columnList = "hotdeal_raw_id"),
+        Index(name = "idx_hotdeal_process_id", columnList = "hotdeal_process_id"),
         Index(name = "idx_platform_type", columnList = "platform_type"),
         Index(name = "idx_wrote_at", columnList = "wrote_at"),
         Index(name = "idx_created_at", columnList = "created_at"),
@@ -24,6 +25,9 @@ import java.time.LocalDateTime
 class Hotdeal(
     @Column(nullable = false, comment = "핫딜 원본 데이터 ID")
     val hotdealRawId: Long,
+
+    @Column(comment = "핫딜 가공 데이터 ID")
+    var hotdealProcessId: Long? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, comment = "플랫폼 타입")
@@ -39,19 +43,19 @@ class Hotdeal(
     val title: String,
 
     @Column(comment = "게시글 제목 (영문)")
-    val titleEn: String? = null,
+    var titleEn: String? = null,
 
     @Column(comment = "상품명")
-    val productName: String? = null,
+    var productName: String? = null,
 
     @Column(comment = "상품명 (영문)")
-    val productNameEn: String? = null,
+    var productNameEn: String? = null,
 
     @Column(scale = 2, comment = "가격")
-    val price: BigDecimal? = null,
+    var price: BigDecimal? = null,
 
     @Column(length = 3, comment = "통화 단위")
-    val currencyUnit: String = "KRW",
+    var currencyUnit: String = "KRW",
 
     @Column(comment = "조회수")
     var viewCount: Int = 0,
