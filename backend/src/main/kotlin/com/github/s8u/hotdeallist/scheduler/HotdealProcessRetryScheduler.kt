@@ -2,7 +2,9 @@ package com.github.s8u.hotdeallist.scheduler
 
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
 import com.github.s8u.hotdeallist.repository.HotdealRawRepository
+import com.github.s8u.hotdeallist.repository.HotdealRepository
 import com.github.s8u.hotdeallist.service.HotdealProcessService
+import com.github.s8u.hotdeallist.service.HotdealSearchService
 import com.github.s8u.hotdeallist.service.HotdealService
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -12,11 +14,13 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConditionalOnProperty(prefix = "app", name = ["mode"], havingValue = "CRAWLING_API")
-class HotdealRetryScheduler(
+class HotdealProcessRetryScheduler(
     private val hotdealRawRepository: HotdealRawRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
     private val hotdealProcessService: HotdealProcessService,
-    private val hotdealService: HotdealService
+    private val hotdealService: HotdealService,
+    private val hotdealSearchService: HotdealSearchService,
+    private val hotdealRepository: HotdealRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -45,8 +49,12 @@ class HotdealRetryScheduler(
                     hotdealProcessService.processHotdealFromRaw(raw.id!!, useFreeOnly = true)
                 }
 
-                // 핫딜 생성
-                hotdealService.createHotdealFromRawAndProcess(raw.id!!)
+                // 핫딜 upsert 후 ES 색인
+                val hotdealId = hotdealService.upsertHotdealFromRawAndProcess(raw.id!!)
+                val hotdeal = hotdealRepository.findById(hotdealId).orElse(null)
+                if (hotdeal != null) {
+                    hotdealSearchService.indexHotdeal(hotdeal)
+                }
                 success++
             } catch (e: Exception) {
                 failed++
