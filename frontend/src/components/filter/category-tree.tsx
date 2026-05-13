@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import type { CategoryNode } from "@/lib/types";
@@ -60,9 +60,7 @@ function CategoryTreeItem({
     const hasChildren = node.children.length > 0;
     const [open, setOpen] = useState(false);
     const shouldForceOpen = !!forceExpandedCodes?.has(node.code);
-    useEffect(() => {
-        if (shouldForceOpen) setOpen(true);
-    }, [shouldForceOpen]);
+    const expanded = open || shouldForceOpen;
     const isActive = value === node.code;
 
     const lg = size === "lg";
@@ -88,13 +86,13 @@ function CategoryTreeItem({
                             "flex shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground hover:bg-muted",
                             lg ? "size-7" : "size-5",
                         )}
-                        aria-label={open ? "접기" : "펼치기"}
+                        aria-label={expanded ? "접기" : "펼치기"}
                     >
                         <ChevronRight
                             className={cn(
                                 "transition-transform",
                                 lg ? "size-4" : "size-3",
-                                open && "rotate-90",
+                                expanded && "rotate-90",
                             )}
                         />
                     </button>
@@ -117,7 +115,7 @@ function CategoryTreeItem({
                 </button>
             </div>
 
-            {hasChildren && open ? (
+            {hasChildren && expanded ? (
                 <CategoryTree
                     nodes={node.children}
                     value={value}

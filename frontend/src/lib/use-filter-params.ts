@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { type FilterState } from "@/components/filter/filter-sidebar";
@@ -38,12 +38,10 @@ export function useInitialFilterFromParams(): {
     initialKeyword: string;
 } {
     const searchParams = useSearchParams();
-    const ref = useRef<{ initialFilter: FilterState; initialKeyword: string } | null>(null);
-
-    if (!ref.current) {
+    const [initialParams] = useState(() => {
         const { filter, keyword } = parseFilterParams(searchParams);
-        ref.current = { initialFilter: filter, initialKeyword: keyword };
-    }
+        return { initialFilter: filter, initialKeyword: keyword };
+    });
 
-    return ref.current;
+    return initialParams;
 }

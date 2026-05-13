@@ -25,7 +25,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogClose,
 } from "@/components/ui/dialog";
 
 type PriceHistoryDialogProps = {
@@ -83,6 +82,21 @@ type ChartDataItem = {
     avg: number;
     count: number;
     hotdeals: HotdealSummary[];
+};
+
+type DotProps = {
+    cx?: number;
+    cy?: number;
+    index?: number;
+};
+
+type ChartMouseState = {
+    activeTooltipIndex?: number | string | null;
+};
+
+type CustomTooltipProps = {
+    active?: boolean;
+    payload?: Array<{ payload: ChartDataItem }>;
 };
 
 function PriceHistoryChart({ hotdealId }: { hotdealId: number }) {
@@ -201,8 +215,11 @@ function PriceChart({
         return "middle";
     };
 
-    const renderDot = (props: any) => {
+    const renderDot = (props: DotProps) => {
         const { cx, cy, index } = props;
+        if (typeof cx !== "number" || typeof cy !== "number" || typeof index !== "number") {
+            return null;
+        }
 
         if (index === selectedIndex && index !== minIndex && index !== maxIndex) {
             return (
@@ -234,9 +251,10 @@ function PriceChart({
         return <circle key={`dot-${index}`} cx={cx} cy={cy} r={3} fill="hsl(var(--primary))" />;
     };
 
-    const handleMouseMove = (state: any) => {
+    const handleMouseMove = (state: ChartMouseState) => {
         if (state?.activeTooltipIndex != null) {
-            activeIndexRef.current = state.activeTooltipIndex;
+            const index = Number(state.activeTooltipIndex);
+            activeIndexRef.current = Number.isNaN(index) ? null : index;
         }
     };
 
@@ -358,7 +376,7 @@ function DealListPanel({
     );
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (

@@ -9,6 +9,7 @@ import {
     UserIcon,
     XIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSuggest } from "@/api/generated/hotdeal/hotdeal";
@@ -46,7 +47,8 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
     const desktopWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        setRecentSearches(getRecentSearches());
+        const timer = window.setTimeout(() => setRecentSearches(getRecentSearches()), 0);
+        return () => window.clearTimeout(timer);
     }, []);
 
     useEffect(() => {
@@ -95,8 +97,8 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
     useEffect(() => {
         const trimmed = activeDraft.trim();
         if (!trimmed) {
-            setDebouncedDraft("");
-            return;
+            const timer = setTimeout(() => setDebouncedDraft(""), 0);
+            return () => clearTimeout(timer);
         }
         const now = Date.now();
         const elapsed = now - lastFiredRef.current;
@@ -112,14 +114,8 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         { q: debouncedDraft },
         { query: { enabled: debouncedDraft.length >= 1, placeholderData: (prev) => prev } },
     );
-    const prevSuggestionsRef = useRef<string[]>([]);
     const rawSuggestions = debouncedDraft ? (suggestData?.suggestions ?? []) : [];
-    if (rawSuggestions.length > 0) {
-        prevSuggestionsRef.current = rawSuggestions;
-    }
-    const suggestions = debouncedDraft
-        ? (rawSuggestions.length > 0 ? rawSuggestions : prevSuggestionsRef.current)
-        : [];
+    const suggestions = debouncedDraft ? rawSuggestions : [];
 
     const handleSuggestionClick = useCallback((value: string) => {
         const query = (searchOpen ? mobileDraft : draft).trim();
@@ -142,7 +138,8 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
 
     // 항목이 바뀌면 선택 초기화
     useEffect(() => {
-        setActiveIndex(-1);
+        const timer = setTimeout(() => setActiveIndex(-1), 0);
+        return () => clearTimeout(timer);
     }, [debouncedDraft, searchOpen]);
 
     const handleKeyNav = useCallback((e: React.KeyboardEvent, items: string[], onSelect: (value: string) => void) => {
@@ -185,10 +182,10 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         <>
             <header className="sticky top-0 z-40 w-full bg-background">
                 <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
-                    <a href="/" className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
+                    <Link href="/" className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
                         <FireIcon className="size-7 text-orange-500 sm:size-8" weight="fill" />
                         <span>핫딜리스트</span>
-                    </a>
+                    </Link>
 
                     <div ref={desktopWrapperRef} className="relative mx-auto hidden w-full max-w-xl md:block">
                         <MagnifyingGlassIcon

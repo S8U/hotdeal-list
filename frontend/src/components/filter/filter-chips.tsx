@@ -32,7 +32,6 @@ const formatPriceShort = (raw: string) => {
 export function FilterChips({
     categoryTree,
     platformCommunityMap,
-    communityGroups,
     value,
     onOpen,
     onReset,

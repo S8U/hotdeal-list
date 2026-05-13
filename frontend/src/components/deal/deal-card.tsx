@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import {
     Armchair,
@@ -26,6 +26,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 import { CommunityTag } from "./community-tag";
 import { PriceHistoryButton } from "./price-history-dialog";
+
+const subscribeMounted = () => () => {};
 
 const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
     electronics: Cpu,
@@ -204,12 +206,8 @@ const formatAbsolute = (iso: string) =>
     });
 
 function TimeLabel({ iso }: { iso: string }) {
-    const [mounted, setMounted] = useState(false);
+    const mounted = useSyncExternalStore(subscribeMounted, () => true, () => false);
     const [showAbsolute, setShowAbsolute] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     // SSR/첫 hydrate 시에는 dateTime만 채운 빈 라벨을 그려 mismatch를 피한다.
     // 마운트 이후 실제 시간 문자열을 채운다.
