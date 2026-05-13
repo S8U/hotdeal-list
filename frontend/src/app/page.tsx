@@ -21,6 +21,7 @@ import type { CategoryNode } from "@/lib/types";
 import HomeClient from "./home-client";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
+const HOME_TITLE = "핫딜리스트 - 실시간 핫딜 모음";
 
 const toCategoryNodes = (raw: CategoryWithChildren[] | undefined): CategoryNode[] => {
     if (!raw) return [];
@@ -100,7 +101,7 @@ export async function generateMetadata({
         ? resolveCategoryName(categoryTree, filter.categoryCode)
         : null;
 
-    const title = trimmed ? `${trimmed} - 핫딜리스트 검색` : "핫딜리스트";
+    const title = trimmed ? `${trimmed} - 핫딜리스트 검색` : HOME_TITLE;
     const description = describeFilters(
         trimmed,
         categoryLabel,

@@ -6,11 +6,12 @@ import { Providers } from "./providers";
 import { GTM_ID } from "@/lib/gtm";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_TITLE = "핫딜리스트 - 실시간 핫딜 모음";
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
     title: {
-        default: "핫딜리스트",
+        default: SITE_TITLE,
         template: "%s",
     },
     description:
@@ -21,14 +22,14 @@ export const metadata: Metadata = {
         type: "website",
         siteName: "핫딜리스트",
         locale: "ko_KR",
-        title: "핫딜리스트",
+        title: SITE_TITLE,
         description:
             "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.",
         url: "/",
     },
     twitter: {
         card: "summary",
-        title: "핫딜리스트",
+        title: SITE_TITLE,
         description:
             "여러 커뮤니티의 실시간 핫딜을 한 곳에서 모아 보세요.",
     },

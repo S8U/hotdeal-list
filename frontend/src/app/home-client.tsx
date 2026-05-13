@@ -45,6 +45,8 @@ type HomeClientProps = {
     initialKeyword: string;
 };
 
+const HOME_TITLE = "핫딜리스트 - 실시간 핫딜 모음";
+
 export default function HomeClient({ initialFilter, initialKeyword }: HomeClientProps) {
     const [filter, setFilter] = useState<FilterState>(initialFilter);
     const [keyword, setKeyword] = useState(initialKeyword);
@@ -52,7 +54,7 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
     useFilterParamsSync(filter, keyword);
 
     const trimmedKeyword = keyword.trim();
-    useDocumentTitle(trimmedKeyword ? `${trimmedKeyword} - 핫딜리스트 검색` : "핫딜리스트");
+    useDocumentTitle(trimmedKeyword ? `${trimmedKeyword} - 핫딜리스트 검색` : HOME_TITLE);
 
     const [sheetOpen, setSheetOpen] = useState(false);
     const [activeChip, setActiveChip] = useState<FilterChipKey | null>(null);
@@ -254,4 +256,3 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
         </div>
     );
 }
-
