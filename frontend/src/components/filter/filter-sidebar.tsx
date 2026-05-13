@@ -206,7 +206,7 @@ export function FilterSidebar({
     ) : null;
 
     return (
-        <aside className={className}>
+        <aside className={className} data-nosnippet>
             {showSectionTitles ? (
                 <div>
                     <h2 className="mb-3 text-base font-semibold">필터</h2>

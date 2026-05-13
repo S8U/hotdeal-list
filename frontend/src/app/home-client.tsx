@@ -175,11 +175,17 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
 
                 <main className="min-w-0 flex-1 pt-2 sm:pt-3">
                     {isError ? (
-                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
+                        <div
+                            className="flex min-h-60 items-center justify-center text-sm text-muted-foreground"
+                            data-nosnippet
+                        >
                             핫딜을 불러오지 못했습니다.
                         </div>
                     ) : isLoading ? (
-                        <div className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
+                        <div
+                            className="flex min-h-60 items-center justify-center text-sm text-muted-foreground"
+                            data-nosnippet
+                        >
                             불러오는 중...
                         </div>
                     ) : (
@@ -202,7 +208,10 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
                             />
                             <div ref={sentinelRef} className="h-10" />
                             {isFetchingNextPage ? (
-                                <div className="py-4 text-center text-sm text-muted-foreground">
+                                <div
+                                    className="py-4 text-center text-sm text-muted-foreground"
+                                    data-nosnippet
+                                >
                                     불러오는 중...
                                 </div>
                             ) : null}
