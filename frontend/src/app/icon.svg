@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔥</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="HotDeal List">
+  <rect x="14" y="14" width="100" height="100" rx="30" fill="#ff6242"/>
+  <g transform="translate(5 -3) scale(.92)">
+    <path
+      d="M66 27c9 11 17 23 17 37 0 5-2 10-2 14 0 4 3 7 7 5 3-2 6-7 6-13 8 13 7 30-4 40-10 10-29 12-42 4-12-7-18-20-15-34 2-10 9-18 16-26 7-8 15-16 17-27Z"
+      fill="#fff7e8"
+    />
+  </g>
+</svg>
