@@ -144,11 +144,20 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
         setSheetOpen(true);
     };
 
+    const resetHomeState = () => {
+        setKeyword("");
+        setFilter(INITIAL_FILTER);
+        setPendingFilter(INITIAL_FILTER);
+        setActiveChip(null);
+        setSheetOpen(false);
+    };
+
     return (
         <div className="min-h-screen bg-muted/50">
             <SiteHeader
                 keyword={keyword}
                 onSearch={setKeyword}
+                onLogoClick={resetHomeState}
                 mobileSlot={
                     <FilterChips
                         categoryTree={categoryTree}

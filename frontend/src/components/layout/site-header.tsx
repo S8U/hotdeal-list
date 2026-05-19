@@ -36,9 +36,10 @@ type SiteHeaderProps = {
     mobileSlot?: React.ReactNode;
     keyword?: string;
     onSearch?: (keyword: string) => void;
+    onLogoClick?: () => void;
 };
 
-export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderProps) {
+export function SiteHeader({ mobileSlot, keyword = "", onSearch, onLogoClick }: SiteHeaderProps) {
     const [searchOpen, setSearchOpen] = useState(false);
     const [draft, setDraft] = useState(keyword);
     const [mobileDraft, setMobileDraft] = useState(keyword);
@@ -89,6 +90,14 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
     const handleClearRecent = useCallback(() => {
         setRecentSearches(clearRecentSearches());
     }, []);
+
+    const handleLogoClick = useCallback(() => {
+        setDraft("");
+        setMobileDraft("");
+        setSearchOpen(false);
+        setDesktopFocused(false);
+        onLogoClick?.();
+    }, [onLogoClick]);
 
     // 자동완성: throttle + debounce 검색어
     const [debouncedDraft, setDebouncedDraft] = useState("");
@@ -182,7 +191,11 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch }: SiteHeaderPro
         <>
             <header className="sticky top-0 z-40 w-full bg-background" data-nosnippet>
                 <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
-                    <Link href="/" className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
+                    <Link
+                        href="/"
+                        onClick={handleLogoClick}
+                        className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl"
+                    >
                         <Image
                             src="/icon.svg"
                             alt=""
