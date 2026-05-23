@@ -197,7 +197,7 @@ export function SiteHeader({ mobileSlot, keyword = "", onSearch, onLogoClick }: 
                         className="flex shrink-0 items-center gap-2 text-xl font-bold text-foreground sm:text-2xl"
                     >
                         <Image
-                            src="/icon.svg"
+                            src="/brand-icon.svg"
                             alt=""
                             width={32}
                             height={32}
