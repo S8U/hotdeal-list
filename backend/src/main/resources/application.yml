@@ -4,7 +4,9 @@ spring:
   profiles:
     active: local
   config:
-    import: optional:file:backend/.env[.properties]
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:backend/.env[.properties]
 
 # 애플리케이션 실행 모드
 # - API: 크롤링 수행 X (API 서버 전용)
