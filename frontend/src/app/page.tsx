@@ -13,12 +13,15 @@ import {
     getListPlatformsQueryKey,
     listPlatforms,
 } from "@/api/generated/platform/platform";
-import type { CategoryResponse } from "@/api/generated/model";
+import type { CategoryResponse, HotdealListResponse, HotdealResponse } from "@/api/generated/model";
 import { findCategoryPath, getCategorySubtreeCodes } from "@/lib/categories";
 import { parseFilterParams } from "@/lib/filter-params";
+import { buildItemListJsonLd, buildWebSiteJsonLd } from "@/lib/structured-data";
 import type { CategoryNode } from "@/lib/types";
 
 import HomeClient from "./home-client";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 type CategoryWithChildren = CategoryResponse & { children?: CategoryWithChildren[] };
 const HOME_TITLE = "핫딜리스트 - 실시간 핫딜 모음";
@@ -174,19 +177,37 @@ export default async function Home({
         maxPrice: filter.priceMax ? Number(filter.priceMax) : undefined,
     };
 
+    const hotdealOptions = getListHotdealsInfiniteQueryOptions(params);
     await queryClient
         .prefetchInfiniteQuery({
             // orval이 만들어주는 옵션 객체를 그대로 사용 (queryKey/queryFn 일치 보장)
-            ...getListHotdealsInfiniteQueryOptions(params),
+            ...hotdealOptions,
             initialPageParam: undefined,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
         .catch(() => undefined);
 
+    // prefetch된 첫 페이지 딜을 그대로 JSON-LD(ItemList)로 SSR 출력.
+    const cached = queryClient.getQueryData(hotdealOptions.queryKey) as
+        | { pages?: HotdealListResponse[] }
+        | undefined;
+    const firstPageDeals: HotdealResponse[] = cached?.pages?.[0]?.items ?? [];
+
     const dehydrated = dehydrate(queryClient);
+    const jsonLd = [
+        buildWebSiteJsonLd(SITE_URL),
+        ...(firstPageDeals.length ? [buildItemListJsonLd(SITE_URL, firstPageDeals)] : []),
+    ];
 
     return (
         <HydrationBoundary state={dehydrated}>
+            <script
+                type="application/ld+json"
+                // 신뢰 가능한 자체 데이터만 직렬화. </script> 이스케이프로 XSS 차단.
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+                }}
+            />
             <HomeClient initialFilter={filter} initialKeyword={keyword} />
         </HydrationBoundary>
     );

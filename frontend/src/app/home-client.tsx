@@ -183,6 +183,11 @@ export default function HomeClient({ initialFilter, initialKeyword }: HomeClient
                 />
 
                 <main className="min-w-0 flex-1 pt-2 sm:pt-3">
+                    <h1 className="sr-only">
+                        {trimmedKeyword
+                            ? `${trimmedKeyword} 핫딜 검색 결과 - 핫딜리스트`
+                            : "실시간 핫딜 모음 - 쿨엔조이·퀘이사존·루리웹·뽐뿌·클리앙 통합 핫딜리스트"}
+                    </h1>
                     {isError ? (
                         <div
                             className="flex min-h-60 items-center justify-center text-sm text-muted-foreground"
