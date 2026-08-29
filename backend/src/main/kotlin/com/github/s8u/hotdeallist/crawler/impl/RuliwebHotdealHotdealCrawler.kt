@@ -1,20 +1,33 @@
 package com.github.s8u.hotdeallist.crawler.impl
 
+import com.github.s8u.hotdeallist.config.CrawlerProperties
 import com.github.s8u.hotdeallist.crawler.HotdealCrawler
 import com.github.s8u.hotdeallist.crawler.HotdealCrawlingException
 import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlDetailDto
 import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlListDto
 import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlListItemDto
 import com.github.s8u.hotdeallist.enums.PlatformType
+import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Component
+import java.net.Proxy
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Component
-class RuliwebHotdealHotdealCrawler : HotdealCrawler {
+class RuliwebHotdealHotdealCrawler(
+    private val crawlerProperties: CrawlerProperties
+) : HotdealCrawler {
+
+    private val proxy: Proxy? = crawlerProperties.ruliweb.socks.toProxy()
+
+    private fun connect(url: String): Connection {
+        val connection = Jsoup.connect(url).timeout(15_000)
+
+        return proxy?.let(connection::proxy) ?: connection
+    }
 
     override fun getPlatformType(): PlatformType {
         return PlatformType.RULIWEB_HOTDEAL
@@ -32,7 +45,7 @@ class RuliwebHotdealHotdealCrawler : HotdealCrawler {
     }
 
     override fun crawlList(page: Int): HotdealCrawlListDto {
-        val document = Jsoup.connect("https://bbs.ruliweb.com/market/board/1020?page=${page}").get()
+        val document = connect("https://bbs.ruliweb.com/market/board/1020?page=${page}").get()
 
         val rowElements = document.select(".board_main .table_body:not(.notice):not(.best)")
         val items = rowElements.map { rowElement ->
@@ -78,7 +91,7 @@ class RuliwebHotdealHotdealCrawler : HotdealCrawler {
         lateinit var document: Document
 
         try {
-            document = Jsoup.connect(url).get()
+            document = connect(url).get()
 
             val title = document.select(".board_main .subject_text .subject_inner_text").text()
             val category = document.select(".board_main .subject_text .category_text").text()

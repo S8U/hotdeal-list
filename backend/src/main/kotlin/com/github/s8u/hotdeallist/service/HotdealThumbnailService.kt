@@ -1,5 +1,6 @@
 package com.github.s8u.hotdeallist.service
 
+import com.github.s8u.hotdeallist.config.CrawlerProperties
 import com.github.s8u.hotdeallist.enums.PlatformType
 import com.github.s8u.hotdeallist.store.FileStore
 import com.sksamuel.scrimage.ImmutableImage
@@ -7,23 +8,19 @@ import com.sksamuel.scrimage.webp.WebpWriter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
+import java.net.HttpURLConnection
+import java.net.Proxy
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.time.Duration
 
 @Service
 class HotdealThumbnailService(
-    private val fileStore: FileStore
+    private val fileStore: FileStore,
+    private val crawlerProperties: CrawlerProperties
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val httpClient: HttpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(10))
-        .followRedirects(HttpClient.Redirect.NORMAL)
-        .build()
+    private val ruliwebProxy: Proxy? = crawlerProperties.ruliweb.socks.toProxy()
 
     fun downloadAndStore(
         platformType: PlatformType,
@@ -34,7 +31,8 @@ class HotdealThumbnailService(
         val imageUrl = thumbnailUrl ?: fallbackUrl ?: return null
 
         return try {
-            val imageBytes = downloadImage(imageUrl) ?: return null
+            val proxy = findProxy(imageUrl)
+            val imageBytes = downloadImage(imageUrl, proxy) ?: return null
             val webpBytes = convertToWebp(imageBytes) ?: return null
 
             val path = "${platformType.name}/$platformPostId.webp"
@@ -52,22 +50,32 @@ class HotdealThumbnailService(
         return thumbnailPath?.let { fileStore.getUrl(it) }
     }
 
-    private fun downloadImage(url: String): ByteArray? {
+    private fun findProxy(url: String): Proxy? {
+        if (ruliwebProxy == null) return null
+
+        val host = runCatching { URI.create(url).host }.getOrNull() ?: return null
+
+        return if (host == "ruliweb.com" || host.endsWith(".ruliweb.com")) ruliwebProxy else null
+    }
+
+    private fun downloadImage(url: String, proxy: Proxy?): ByteArray? {
         return try {
-            val request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(30))
-                .header("User-Agent", "Mozilla/5.0 (compatible; HotdealBot/1.0)")
-                .GET()
-                .build()
+            val target = URI.create(url).toURL()
+            val connection = (proxy?.let(target::openConnection) ?: target.openConnection()) as HttpURLConnection
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 30_000
+            connection.instanceFollowRedirects = true
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; HotdealBot/1.0)")
 
-            val response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray())
-
-            if (response.statusCode() == 200) {
-                response.body()
-            } else {
-                logger.debug("Failed to download image: {} - status {}", url, response.statusCode())
-                null
+            try {
+                if (connection.responseCode == 200) {
+                    connection.inputStream.use { it.readBytes() }
+                } else {
+                    logger.debug("Failed to download image: {} - status {}", url, connection.responseCode)
+                    null
+                }
+            } finally {
+                connection.disconnect()
             }
         } catch (e: Exception) {
             logger.debug("Failed to download image: {} - {}", url, e.message)
