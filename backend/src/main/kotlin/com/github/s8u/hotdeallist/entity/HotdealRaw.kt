@@ -37,9 +37,6 @@ class HotdealRaw(
     @Column(comment = "게시글 카테고리")
     val category: String? = null,
 
-    @Column(columnDefinition = "TEXT", comment = "게시글 본문 HTML")
-    val contentHtml: String? = null,
-
     @Column(nullable = true, scale = 2, comment = "가격")
     val price: BigDecimal? = null,
 
@@ -76,5 +73,4 @@ class HotdealRaw(
     @Column(nullable = false, comment = "게시글 작성 시간")
     val wroteAt: LocalDateTime
 ) : BaseEntity()
-
 

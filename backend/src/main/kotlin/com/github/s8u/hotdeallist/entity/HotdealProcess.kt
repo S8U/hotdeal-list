@@ -24,12 +24,6 @@ class HotdealProcess(
     @Column(nullable = false, comment = "AI 모델명")
     val aiModel: String,
 
-    @Column(columnDefinition = "TEXT", nullable = false, comment = "AI 요청 프롬프트")
-    val aiPrompt: String,
-
-    @Column(columnDefinition = "TEXT", nullable = false, comment = "AI 응답 원본")
-    val aiResponse: String,
-
     @Column(nullable = false, comment = "게시글 제목")
     val title: String,
 

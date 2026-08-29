@@ -1,0 +1,140 @@
+CREATE TABLE `categories` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) DEFAULT NULL,
+    `code` VARCHAR(255) NOT NULL COMMENT '카테고리 코드',
+    `depth` INT NOT NULL COMMENT '카테고리 깊이',
+    `name` VARCHAR(255) NOT NULL COMMENT '카테고리 이름',
+    `name_en` VARCHAR(255) DEFAULT NULL COMMENT '카테고리 이름 (영문)',
+    `parent_id` BIGINT DEFAULT NULL COMMENT '부모 카테고리 ID',
+    `sort_order` INT DEFAULT NULL COMMENT '정렬 순서',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_code` (`code`),
+    KEY `idx_parent_id` (`parent_id`),
+    KEY `idx_depth` (`depth`),
+    KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='카테고리 정보';
+
+CREATE TABLE `es_dictionary` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL COMMENT '등록 시간',
+    `source` ENUM('AUTO', 'MANUAL') NOT NULL COMMENT '등록 출처 (AUTO/MANUAL)',
+    `word` VARCHAR(50) NOT NULL COMMENT '사전 단어',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_word` (`word`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Elasticsearch nori 사용자 사전';
+
+CREATE TABLE `hotdeal_categories` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) DEFAULT NULL,
+    `category_id` BIGINT NOT NULL COMMENT '카테고리 ID',
+    `hotdeal_id` BIGINT NOT NULL COMMENT '핫딜 ID',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_hotdeal_category` (`hotdeal_id`, `category_id`),
+    KEY `idx_hotdeal_id` (`hotdeal_id`),
+    KEY `idx_category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='핫딜 카테고리 매핑';
+
+CREATE TABLE `hotdeal_processes` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) DEFAULT NULL,
+    `ai_model` VARCHAR(255) NOT NULL COMMENT 'AI 모델명',
+    `ai_prompt` TEXT NOT NULL COMMENT 'AI 요청 프롬프트',
+    `ai_response` TEXT NOT NULL COMMENT 'AI 응답 원본',
+    `category_code` VARCHAR(255) NOT NULL COMMENT '카테고리 코드',
+    `category_confidence` DECIMAL(3, 2) NOT NULL COMMENT '카테고리 분류 신뢰도 (0.00 ~ 1.00)',
+    `currency_unit` VARCHAR(10) DEFAULT NULL COMMENT '통화 단위',
+    `hotdeal_raw_id` BIGINT NOT NULL COMMENT '핫딜 원본 ID',
+    `price` DECIMAL(38, 2) DEFAULT NULL COMMENT '가격',
+    `product_name` VARCHAR(255) NOT NULL COMMENT '상품명 (한글)',
+    `product_name_en` VARCHAR(255) NOT NULL COMMENT '상품명 (영어)',
+    `shopping_platform` VARCHAR(255) DEFAULT NULL COMMENT '쇼핑 플랫폼',
+    `title` VARCHAR(255) NOT NULL COMMENT '게시글 제목',
+    `title_en` VARCHAR(255) NOT NULL COMMENT '게시글 제목 (영문)',
+    PRIMARY KEY (`id`),
+    KEY `idx_hotdeal_raw_id` (`hotdeal_raw_id`),
+    KEY `idx_category_confidence` (`category_confidence`),
+    KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='핫딜 가공 데이터';
+
+CREATE TABLE `hotdeal_raws` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) DEFAULT NULL,
+    `category` VARCHAR(255) DEFAULT NULL COMMENT '게시글 카테고리',
+    `comment_count` INT DEFAULT NULL COMMENT '댓글 수',
+    `content_html` TEXT DEFAULT NULL COMMENT '게시글 본문 HTML',
+    `currency_unit` VARCHAR(3) DEFAULT NULL COMMENT '통화 단위',
+    `first_image_url` VARCHAR(2048) DEFAULT NULL COMMENT '첫 번째 이미지 URL',
+    `is_ended` BIT(1) DEFAULT NULL COMMENT '종료 여부',
+    `like_count` INT DEFAULT NULL COMMENT '좋아요 수',
+    `platform_post_id` VARCHAR(255) NOT NULL COMMENT '플랫폼 게시글 ID',
+    `platform_type` ENUM(
+        'CLIEN_ALTTEUL',
+        'COOLENJOY_JIRUM',
+        'PPOMPPU_HOTDEAL',
+        'PPOMPPU_OVERSEAS_HOTDEAL',
+        'PPOMPPU_PPOMPPU',
+        'QUASARZONE_JIRUM',
+        'QUASARZONE_TASEYO',
+        'RULIWEB_HOTDEAL'
+    ) NOT NULL COMMENT '플랫폼 타입',
+    `price` DECIMAL(38, 2) DEFAULT NULL COMMENT '가격',
+    `source_url` VARCHAR(2048) DEFAULT NULL COMMENT '출처 URL',
+    `thumbnail_image_url` VARCHAR(2048) DEFAULT NULL COMMENT '썸네일 이미지 URL',
+    `title` VARCHAR(255) NOT NULL COMMENT '게시글 제목',
+    `url` VARCHAR(2048) NOT NULL COMMENT '게시글 URL',
+    `view_count` INT DEFAULT NULL COMMENT '조회수',
+    `wrote_at` DATETIME(6) NOT NULL COMMENT '게시글 작성 시간',
+    `is_thumbnail_downloaded` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '썸네일 다운로드 여부',
+    `thumbnail_path` VARCHAR(512) DEFAULT NULL COMMENT '썸네일 경로',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_platform_post` (`platform_type`, `platform_post_id`),
+    KEY `idx_platform_type` (`platform_type`),
+    KEY `idx_wrote_at` (`wrote_at`),
+    KEY `idx_is_ended` (`is_ended`),
+    KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='핫딜 원본 데이터';
+
+CREATE TABLE `hotdeals` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `created_at` DATETIME(6) NOT NULL,
+    `updated_at` DATETIME(6) DEFAULT NULL,
+    `comment_count` INT DEFAULT NULL COMMENT '댓글 수',
+    `currency_unit` VARCHAR(3) DEFAULT NULL COMMENT '통화 단위',
+    `hotdeal_raw_id` BIGINT NOT NULL COMMENT '핫딜 원본 데이터 ID',
+    `is_ended` BIT(1) DEFAULT NULL COMMENT '종료 여부',
+    `like_count` INT DEFAULT NULL COMMENT '좋아요 수',
+    `platform_post_id` VARCHAR(255) NOT NULL COMMENT '플랫폼 게시글 ID',
+    `platform_type` ENUM(
+        'CLIEN_ALTTEUL',
+        'COOLENJOY_JIRUM',
+        'PPOMPPU_HOTDEAL',
+        'PPOMPPU_OVERSEAS_HOTDEAL',
+        'PPOMPPU_PPOMPPU',
+        'QUASARZONE_JIRUM',
+        'QUASARZONE_TASEYO',
+        'RULIWEB_HOTDEAL'
+    ) NOT NULL COMMENT '플랫폼 타입',
+    `price` DECIMAL(38, 2) DEFAULT NULL COMMENT '가격',
+    `product_name` VARCHAR(255) DEFAULT NULL COMMENT '상품명',
+    `product_name_en` VARCHAR(255) DEFAULT NULL COMMENT '상품명 (영문)',
+    `source_url` VARCHAR(2048) DEFAULT NULL COMMENT '출처 URL',
+    `thumbnail_path` VARCHAR(512) DEFAULT NULL COMMENT '썸네일 경로',
+    `title` VARCHAR(255) NOT NULL COMMENT '게시글 제목',
+    `title_en` VARCHAR(255) DEFAULT NULL COMMENT '게시글 제목 (영문)',
+    `url` VARCHAR(2048) NOT NULL COMMENT '게시글 URL',
+    `view_count` INT DEFAULT NULL COMMENT '조회수',
+    `wrote_at` DATETIME(6) DEFAULT NULL COMMENT '게시글 작성 시간',
+    `hotdeal_process_id` BIGINT DEFAULT NULL COMMENT '핫딜 가공 데이터 ID',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_platform_post` (`platform_type`, `platform_post_id`),
+    KEY `idx_hotdeal_raw_id` (`hotdeal_raw_id`),
+    KEY `idx_platform_type` (`platform_type`),
+    KEY `idx_wrote_at` (`wrote_at`),
+    KEY `idx_created_at` (`created_at`),
+    KEY `idx_price` (`price`),
+    KEY `idx_hotdeal_process_id` (`hotdeal_process_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='핫딜';

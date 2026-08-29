@@ -3,7 +3,9 @@ package com.github.s8u.hotdeallist.service
 import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlDetailDto
 import com.github.s8u.hotdeallist.crawler.dto.HotdealCrawlListItemDto
 import com.github.s8u.hotdeallist.entity.HotdealRaw
+import com.github.s8u.hotdeallist.entity.HotdealRawContent
 import com.github.s8u.hotdeallist.enums.PlatformType
+import com.github.s8u.hotdeallist.repository.HotdealRawContentRepository
 import com.github.s8u.hotdeallist.repository.HotdealRawRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class HotdealRawService(
     private val hotdealRawRepository: HotdealRawRepository,
+    private val hotdealRawContentRepository: HotdealRawContentRepository,
     private val hotdealThumbnailService: HotdealThumbnailService
 ) {
 
@@ -33,7 +36,6 @@ class HotdealRawService(
             url = crawlDetailDto.url,
             title = crawlDetailDto.title,
             category = item.category ?: crawlDetailDto.category,
-            contentHtml = crawlDetailDto.contentHtml,
             price = crawlDetailDto.price,
             currencyUnit = crawlDetailDto.currencyUnit,
             viewCount = crawlDetailDto.viewCount,
@@ -47,7 +49,17 @@ class HotdealRawService(
             isThumbnailDownloaded = true,
             wroteAt = crawlDetailDto.wroteAt
         )
+        val saved = hotdealRawRepository.save(hotdealRaw)
 
-        return hotdealRawRepository.save(hotdealRaw).id!!
+        crawlDetailDto.contentHtml?.let { contentHtml ->
+            hotdealRawContentRepository.save(
+                HotdealRawContent(
+                    hotdealRawId = saved.id!!,
+                    contentHtml = contentHtml
+                )
+            )
+        }
+
+        return saved.id!!
     }
 }

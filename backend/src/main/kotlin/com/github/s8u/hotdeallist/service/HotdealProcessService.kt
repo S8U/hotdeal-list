@@ -1,7 +1,9 @@
 package com.github.s8u.hotdeallist.service
 
 import com.github.s8u.hotdeallist.entity.HotdealProcess
+import com.github.s8u.hotdeallist.entity.HotdealProcessContent
 import com.github.s8u.hotdeallist.exception.BusinessException
+import com.github.s8u.hotdeallist.repository.HotdealProcessContentRepository
 import com.github.s8u.hotdeallist.repository.HotdealProcessRepository
 import com.github.s8u.hotdeallist.repository.HotdealRawRepository
 import org.slf4j.LoggerFactory
@@ -9,12 +11,15 @@ import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.openai.OpenAiChatOptions
 import org.springframework.stereotype.Service
+import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 
 @Service
 class HotdealProcessService(
     private val hotdealRawRepository: HotdealRawRepository,
     private val hotdealProcessRepository: HotdealProcessRepository,
+    private val hotdealProcessContentRepository: HotdealProcessContentRepository,
+    private val transactionTemplate: TransactionTemplate,
     private val chatModel: ChatModel
 ) {
 
@@ -83,10 +88,8 @@ class HotdealProcessService(
         val price = lines[7].trim().let { if (it == "null" || it.isEmpty()) null else it.toBigDecimalOrNull() }
 
         // 저장
-        var hotdealProcess = HotdealProcess(
+        val hotdealProcess = HotdealProcess(
             hotdealRawId = rawId,
-            aiPrompt = prompt,
-            aiResponse = response,
             aiModel = model,
             title = hotdealRaw.title,
             titleEn = titleEn,
@@ -99,9 +102,20 @@ class HotdealProcessService(
             currencyUnit = currencyUnit
         )
 
-        hotdealProcess = hotdealProcessRepository.save(hotdealProcess)
+        val saved = transactionTemplate.execute {
+            val savedProcess = hotdealProcessRepository.save(hotdealProcess)
+            hotdealProcessContentRepository.save(
+                HotdealProcessContent(
+                    hotdealProcessId = savedProcess.id!!,
+                    aiPrompt = prompt,
+                    aiResponse = response
+                )
+            )
+            savedProcess
+        } ?: throw BusinessException("핫딜 가공 데이터 저장에 실패했습니다.")
+
         logger.info("AI process created: id={}, rawId={}, title={}, titleEn={}, productName={}, productNameEn={}, categoryCode={}, categoryConfidence={}, shoppingPlatform={}, price={}, currencyUnit={}",
-                     hotdealProcess.id, rawId, hotdealRaw.title, titleEn, productName, productNameEn, categoryCode, categoryConfidence, shoppingPlatform, price, currencyUnit)
+                     saved.id, rawId, hotdealRaw.title, titleEn, productName, productNameEn, categoryCode, categoryConfidence, shoppingPlatform, price, currencyUnit)
     }
 
     companion object {
